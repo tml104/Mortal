@@ -63,6 +63,7 @@ class GrpFileDatasetsIter(IterableDataset):
         return self.iterator
 
 def collate(batch):
+    pin_memory = torch.cuda.is_available()
     inputs = []
     lengths = []
     rank_by_players = []
@@ -72,21 +73,42 @@ def collate(batch):
         rank_by_players.append(rank_by_player)
 
     lengths = torch.tensor(lengths)
-    rank_by_players = torch.tensor(rank_by_players, dtype=torch.int64, pin_memory=True)
+    rank_by_players = torch.tensor(rank_by_players, dtype=torch.int64, pin_memory=pin_memory)
 
     padded = pad_sequence(inputs, batch_first=True)
     packed_inputs = pack_padded_sequence(padded, lengths, batch_first=True, enforce_sorted=False)
-    packed_inputs.pin_memory()
+    if pin_memory:
+        packed_inputs.pin_memory()
 
     return packed_inputs, rank_by_players
 
+def build_file_index(train_globs, val_globs, file_index):
+    train_file_list = []
+    val_file_list = []
+    for pat in train_globs:
+        train_file_list.extend(glob(pat, recursive=True))
+    for pat in val_globs:
+        val_file_list.extend(glob(pat, recursive=True))
+    train_file_list.sort(reverse=True)
+    val_file_list.sort(reverse=True)
+    torch.save({'train_file_list': train_file_list, 'val_file_list': val_file_list}, file_index)
+    return train_file_list, val_file_list
+
 def train():
-    cfg = config['grp']
+    cfg = config['grp'] # 需要配置环境变量MORTAL_CFG
     batch_size = cfg['control']['batch_size']
     save_every = cfg['control']['save_every']
     val_steps = cfg['control']['val_steps']
 
-    device = torch.device(cfg['control']['device'])
+    requested_device = torch.device(cfg['control']['device'])
+    if requested_device.type == 'cuda' and not torch.cuda.is_available():
+        logging.warning(
+            'configured device %s is unavailable; falling back to cpu',
+            requested_device,
+        )
+        device = torch.device('cpu')
+    else:
+        device = requested_device
     torch.backends.cudnn.benchmark = cfg['control']['enable_cudnn_benchmark']
     if device.type == 'cuda':
         logging.info(f'device: {device} ({torch.cuda.get_device_name(device)})')
@@ -117,17 +139,18 @@ def train():
         index = torch.load(file_index, weights_only=True)
         train_file_list = index['train_file_list']
         val_file_list = index['val_file_list']
+        missing_train = sum(not path.exists(p) for p in train_file_list)
+        missing_val = sum(not path.exists(p) for p in val_file_list)
+        if missing_train or missing_val:
+            logging.warning(
+                'file index is stale; rebuilding (missing train=%s, missing val=%s)',
+                missing_train,
+                missing_val,
+            )
+            train_file_list, val_file_list = build_file_index(train_globs, val_globs, file_index)
     else:
         logging.info('building file index...')
-        train_file_list = []
-        val_file_list = []
-        for pat in train_globs:
-            train_file_list.extend(glob(pat, recursive=True))
-        for pat in val_globs:
-            val_file_list.extend(glob(pat, recursive=True))
-        train_file_list.sort(reverse=True)
-        val_file_list.sort(reverse=True)
-        torch.save({'train_file_list': train_file_list, 'val_file_list': val_file_list}, file_index)
+        train_file_list, val_file_list = build_file_index(train_globs, val_globs, file_index)
     writer = SummaryWriter(cfg['control']['tensorboard_dir'])
 
     train_file_data = GrpFileDatasetsIter(
@@ -139,7 +162,7 @@ def train():
         dataset = train_file_data,
         batch_size = batch_size,
         drop_last = True,
-        num_workers = 1,
+        num_workers = 0,
         collate_fn = collate,
     ))
 
@@ -152,7 +175,7 @@ def train():
         dataset = val_file_data,
         batch_size = batch_size,
         drop_last = True,
-        num_workers = 1,
+        num_workers = 0,
         collate_fn = collate,
     ))
 

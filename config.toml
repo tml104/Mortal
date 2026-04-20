@@ -1,0 +1,27 @@
+[grp]
+state_file = "./artifacts/grp.pth"
+
+[grp.network]
+hidden_size = 128
+num_layers = 4
+
+[grp.control]
+device = "cuda:0"
+enable_cudnn_benchmark = false
+tensorboard_dir = "./artifacts/tensorboard/grp"
+batch_size = 2048
+save_every = 2000
+val_steps = 400
+
+[grp.dataset]
+train_globs = [
+  "./data/grp/train/**/*.json.gz",
+]
+val_globs = [
+  "./data/grp/val/**/*.json.gz",
+]
+file_index = "./artifacts/grp_file_index.pth"
+file_batch_size = 500
+
+[grp.optim]
+lr = 1e-5
