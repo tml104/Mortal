@@ -284,3 +284,111 @@ class GRP(nn.Module):
         labels = torch.zeros(batch_size, dtype=torch.int64, device=mappings.device)
         labels[mappings[:, 1]] = mappings[:, 0]
         return labels
+
+class GRP_Transformer(nn.Module):
+    def __init__(self, d_model=64, nhead=4, num_layers=2, max_seq_len=60):
+        super().__init__()
+        self.d_model = d_model
+        
+        # 1. 特征投影层：将 7 维输入映射到 Transformer 的工作维度
+        self.input_proj = nn.Linear(GRP_SIZE, d_model)
+        
+        # 2. 位置编码：因为半庄局数有限，直接使用可学习的 Embedding 即可
+        self.pos_emb = nn.Embedding(max_seq_len, d_model)
+        
+        # 3. [CLS] Token：用于聚合全局对局信息
+        self.cls_token = nn.Parameter(torch.randn(1, 1, d_model))
+        
+        # 4. Transformer Encoder
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=d_model, 
+            nhead=nhead, 
+            dim_feedforward=d_model * 4, 
+            batch_first=True,    # 开启 batch_first，输入形状变为 (Batch, Seq, Feature)
+            activation='gelu'    # GELU 在大模型中通常比 ReLU 表现更好
+        )
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
+        
+        # 5. 全连接层分类头：只接收 [CLS] token 的输出 (维度为 d_model)
+        self.fc = nn.Sequential(
+            nn.Linear(d_model, d_model * 2),
+            nn.GELU(),
+            nn.Linear(d_model * 2, 24),
+        )
+        
+        # 保持双精度设置
+        for mod in self.modules():
+            mod.to(torch.float64)
+
+        # 顺位排列组合 (不变)
+        perms = torch.tensor(list(permutations(range(4))))
+        perms_t = perms.transpose(0, 1)
+        self.register_buffer('perms', perms)     # (24, 4)
+        self.register_buffer('perms_t', perms_t) # (4, 24)
+
+    def forward(self, inputs: List[Tensor]):
+        # 接收一个变长序列列表，并在模块内部整理成 Transformer 可消费的
+        # `padded_inputs + padding_mask` 形式，便于复用统一的前向逻辑。
+        device = inputs[0].device
+        lengths = torch.tensor([t.shape[0] for t in inputs], dtype=torch.int64, device=device)
+        padded_inputs = pad_sequence(inputs, batch_first=True)
+        batch_size, max_len, _ = padded_inputs.shape
+        padding_mask = torch.arange(max_len, device=device).expand(batch_size, max_len) >= lengths.unsqueeze(1)
+        return self.forward_padded(padded_inputs, padding_mask)
+
+    def forward_padded(self, padded_inputs: Tensor, padding_mask: Tensor):
+        # 直接接收已经补齐后的 batch 和 padding mask。
+        # 训练脚本里的 collate 会产出这两个张量，避免在模型里重复做 pad。
+        batch_size, max_len, _ = padded_inputs.shape
+        device = padded_inputs.device
+
+        # 1. 投影到 d_model 维度 (B, max_len, d_model)
+        x = self.input_proj(padded_inputs)
+
+        # 2. 生成并加入位置编码
+        # positions: (1, max_len)
+        positions = torch.arange(max_len, device=device).unsqueeze(0)
+        x = x + self.pos_emb(positions)
+
+        # 3. 拼接 [CLS] Token 到序列头部
+        # cls_tokens: (B, 1, d_model)
+        cls_tokens = self.cls_token.expand(batch_size, -1, -1)
+        # 拼接后形状变为 (B, 1 + max_len, d_model)
+        x = torch.cat([cls_tokens, x], dim=1)
+
+        # 4. 构建 Padding Mask，告诉注意力机制忽略填充的无效局数
+        # [CLS] token 永远有效，所以在最前面加上全 False 的列
+        cls_mask = torch.zeros(batch_size, 1, dtype=torch.bool, device=device)
+        # 最终 mask 形状: (B, 1 + max_len)
+        src_key_padding_mask = torch.cat([cls_mask, padding_mask], dim=1)
+
+        # 5. 送入 Transformer
+        out = self.transformer_encoder(x, src_key_padding_mask=src_key_padding_mask)
+
+        # 6. 提取 [CLS] token 的输出特征 (即第 0 个位置)
+        cls_out = out[:, 0, :]
+
+        # 7. 输出 24 种排列的 Logits
+        logits = self.fc(cls_out)
+        return logits
+    
+        # (N, 24) -> (N, player, rank_prob)
+    def calc_matrix(self, logits: Tensor):
+        batch_size = logits.shape[0]
+        probs = logits.softmax(-1)
+        matrix = torch.zeros(batch_size, 4, 4, dtype=probs.dtype)
+        for player in range(4):
+            for rank in range(4):
+                cond = self.perms_t[player] == rank
+                matrix[:, player, rank] = probs[:, cond].sum(-1)
+        return matrix
+
+    # (N, 4) -> (N)
+    def get_label(self, rank_by_player: Tensor):
+        batch_size = rank_by_player.shape[0]
+        perms = self.perms.expand(batch_size, -1, -1).transpose(0, 1)
+        mappings = (perms == rank_by_player).all(-1).nonzero()
+
+        labels = torch.zeros(batch_size, dtype=torch.int64, device=mappings.device)
+        labels[mappings[:, 1]] = mappings[:, 0]
+        return labels

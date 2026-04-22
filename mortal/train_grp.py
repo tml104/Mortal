@@ -63,6 +63,13 @@ class GrpFileDatasetsIter(IterableDataset):
         return self.iterator
 
 def collate(batch):
+    '''
+        collate 的核心任务就是：
+        1. 把一个 batch 里的所有 inputs_seq 收集起来
+        2. 记录每个序列的真实长度
+        3. 把这些不同长度的序列整理成 GRU 可处理的输入格式
+        4. 把标签 rank_by_player 也拼成一个 batch 张量
+    '''
     pin_memory = torch.cuda.is_available()
     inputs = []
     lengths = []

@@ -25,3 +25,31 @@ file_batch_size = 500
 
 [grp.optim]
 lr = 1e-5
+
+[grp_transformer]
+state_file = "./artifacts/grp_transformer.pth"
+
+[grp_transformer.network]
+d_model = 128
+num_layers = 4
+
+[grp_transformer.control]
+device = "cuda:0"
+enable_cudnn_benchmark = false
+tensorboard_dir = "./artifacts/tensorboard/grp_transformer"
+batch_size = 512
+save_every = 2000
+val_steps = 400
+
+[grp_transformer.dataset]
+train_globs = [
+  "./data/grp/train/**/*.json.gz",
+]
+val_globs = [
+  "./data/grp/val/**/*.json.gz",
+]
+file_index = "./artifacts/grp_file_index.pth"
+file_batch_size = 500
+
+[grp_transformer.optim]
+lr = 1e-5
