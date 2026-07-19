@@ -18,6 +18,7 @@
 - [mortal/config.example.toml](/home/tml104/Mortal/mortal/config.example.toml)
 
 conda run -n mortal tensorboard --logdir ./artifacts/tensorboard/grp --port 6006
+conda run -n mortal tensorboard --logdir ./artifacts/tensorboard/grp_transformer/ --port 6006
 
 ---
 

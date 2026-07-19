@@ -37,7 +37,7 @@ num_layers = 4
 device = "cuda:0"
 enable_cudnn_benchmark = false
 tensorboard_dir = "./artifacts/tensorboard/grp_transformer"
-batch_size = 512
+batch_size = 2048
 save_every = 2000
 val_steps = 400
 
