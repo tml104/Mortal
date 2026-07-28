@@ -1,0 +1,77 @@
+[control]
+version = 4
+online = false
+
+state_file = './artifacts/mortal_transformer_offline_v1/latest.pth'
+completion_file = './artifacts/mortal_transformer_offline_v1/epoch_1.completed.json'
+run_log_file = './artifacts/mortal_transformer_offline_v1/train.log'
+tensorboard_dir = './artifacts/mortal_transformer_offline_v1/tensorboard'
+
+device = 'cuda:0'
+enable_cudnn_benchmark = true
+enable_amp = true
+enable_compile = true
+compile_dynamic = true
+batch_size = 512
+opt_step_every = 1
+target_epochs = 1
+epoch_seed = 20260720
+log_every_steps = 250
+
+[dataset]
+globs = ['./data/grp/train/**/*.json.gz']
+file_index = './artifacts/grp_file_index.pth'
+file_index_key = 'train_file_list'
+expected_file_count = 1277548
+expected_file_list_sha256 = 'a308f531a1725d216c0326ea1f700a7695941353feac82fe2205ad772fb679e1'
+file_batch_size = 8
+file_shard_size = 8192
+reserve_ratio = 0.0
+num_workers = 2
+multiprocessing_context = 'spawn'
+prefetch_factor = 1
+pin_memory = true
+player_names_files = []
+num_epochs = 1
+enable_augmentation = false
+augmented_first = false
+
+[env]
+gamma = 1
+pts = [6.0, 4.0, 2.0, 0.0]
+
+[resnet]
+conv_channels = 192
+num_blocks = 40
+
+[cql]
+min_q_weight = 5
+
+[aux]
+next_rank_weight = 0.2
+
+[freeze_bn]
+mortal = false
+
+[optim]
+eps = 1e-8
+betas = [0.9, 0.999]
+weight_decay = 0.1
+max_grad_norm = 0
+
+[optim.scheduler]
+peak = 1e-4
+final = 1e-4
+warm_up_steps = 0
+max_steps = 0
+
+[grp_transformer]
+source_state_file = './artifacts/grp_transformer.pth'
+state_file = './artifacts/mortal_transformer_offline_v1/grp_transformer.frozen.pth'
+expected_sha256 = '7b282898d1cb1d030dfb6f4d1a7933cd82a150d6009ad15ddc4082b039c7bb99'
+
+[grp_transformer.network]
+d_model = 128
+nhead = 4
+num_layers = 4
+max_seq_len = 60

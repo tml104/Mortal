@@ -1,170 +1,95 @@
-# `mjai` 格式说明
+# mjai 协议速查
 
-这份文档基于 `libriichi` 里的实际代码，总结这个项目真正接受和产出的 `mjai` JSON 格式。
+Mortal 使用逐行 JSON 的 mjai 事件流表示对局。事件结构以 [`libriichi/src/mjai/event.rs`](../libriichi/src/mjai/event.rs) 为准，牌字符串以 [`tile.rs`](../libriichi/src/tile.rs) 为准。
 
-对应核心代码：
+```text
+一行 JSON = 一个事件
+多行按发生顺序组成一局或整场对局
+type 字段决定事件种类
+```
 
-- [libriichi/src/mjai/event.rs](/home/tml104/Mortal/libriichi/src/mjai/event.rs)
-- [libriichi/src/mjai/bot.rs](/home/tml104/Mortal/libriichi/src/mjai/bot.rs)
-- [libriichi/src/tile.rs](/home/tml104/Mortal/libriichi/src/tile.rs)
-- [libriichi/src/dataset/gameplay.rs](/home/tml104/Mortal/libriichi/src/dataset/gameplay.rs)
-
-## 1. `mjai` 在这个项目里是什么
-
-在 `libriichi` 中，`mjai` 是一种：
-
-- 一行一个 JSON 事件
-- 事件按时间顺序排列
-- 每条事件用 `"type"` 区分种类
-
-的麻将对局表示格式。
-
-例如：
+示例：
 
 ```json
 {"type":"tsumo","actor":0,"pai":"1m"}
-{"type":"dahai","actor":0,"pai":"2m","tsumogiri":true}
-{"type":"reach","actor":1}
+{"type":"dahai","actor":0,"pai":"1m","tsumogiri":true}
 ```
 
-Rust 里对应的是 [Event](/home/tml104/Mortal/libriichi/src/mjai/event.rs) 这个枚举。它使用：
+## 基本约束
 
-```rust
-#[serde(tag = "type")]
-#[serde(rename_all = "snake_case")]
-```
+### 行与顺序
 
-所以 JSON 中的事件名是 snake_case，例如：
-
-- `start_game`
-- `start_kyoku`
-- `reach_accepted`
-- `end_kyoku`
-
-## 2. 顶层约定
-
-### 2.1 一行一个事件
-
-日志通常是多行文本，每行都是一条 JSON：
-
-```text
-{"type":"start_game", ...}
-{"type":"start_kyoku", ...}
-{"type":"tsumo", ...}
-{"type":"dahai", ...}
-...
-{"type":"end_game"}
-```
-
-Python 侧和 Rust 侧都按“逐行解析 JSON”的方式处理。
-
-### 2.2 事件顺序很重要
-
-`libriichi` 假设日志按真实对局时间顺序出现。典型顺序是：
+解析器按行调用 `json.loads`/Serde，不接受一个跨多行格式化的事件作为日志记录。典型生命周期是：
 
 ```text
 start_game
 -> start_kyoku
 -> tsumo / dahai / chi / pon / kan / reach / ...
--> hora 或 ryukyoku
+-> 一个或多个 hora，或 ryukyoku
 -> end_kyoku
--> 下一局 start_kyoku
--> ...
+-> 下一局 start_kyoku ...
 -> end_game
 ```
 
-### 2.3 actor / target 范围
+JSON 结构合法不代表事件序列合法。`PlayerState` 会按历史状态校验牌、动作和时序；`GameplayLoader` 还要求整场日志以 `start_game` 开始。
 
-代码中所有 `actor` / `target` 都限制为：
+### 玩家编号
 
-- `0`
-- `1`
-- `2`
-- `3`
+`actor`、`target` 和 `oya` 是绝对玩家 ID，只能为 `0..3`。超出范围会在反序列化时失败。
 
-超出这个范围会在反序列化时报错。
+- `actor`：执行动作的人；
+- `target`：提供被鸣牌的人，或和牌时的放铳者；自摸日志通常令 `target == actor`；
+- `oya`：当前庄家。
 
-### 2.4 `kyoku` 范围
+`start_kyoku.kyoku` 从 1 开始，只能为 `1..4`。`PlayerState` 内部会转换成自己的零基表示，不应把内部值直接写回 mjai。
 
-`start_kyoku` 里的 `kyoku` 被限制为：
+### 牌字符串
 
-- `1..=4`
+| 类别 | 合法值 |
+| --- | --- |
+| 万子 | `1m` .. `9m` |
+| 筒子 | `1p` .. `9p` |
+| 索子 | `1s` .. `9s` |
+| 风牌 | `E`、`S`、`W`、`N` |
+| 三元牌 | `P`（白）、`F`（发）、`C`（中） |
+| 赤五 | `5mr`、`5pr`、`5sr` |
+| 未知牌 | `?` |
 
-也就是说，局编号从 `1` 开始。
+字符串区分大小写；`0m`、`5M` 等不会被接受。`?` 主要用于隐藏其他玩家的手牌。
 
-## 3. 牌字符串格式
+## 事件字段表
 
-牌的字符串格式由 [libriichi/src/tile.rs](/home/tml104/Mortal/libriichi/src/tile.rs) 定义。
+表中 `Tile` 表示上述牌字符串，`?` 表示字段可省略或为 null。
 
-### 3.1 数牌
+| `type` | 字段 | 说明 |
+| --- | --- | --- |
+| `none` | 无 | 无动作/跳过 |
+| `start_game` | `names: [str;4]`，`seed?: [u64;2]` | `names` 缺省时为四个空字符串；seed 是 `(nonce, key)` |
+| `start_kyoku` | `bakaze`、`dora_marker`、`kyoku`、`honba`、`kyotaku`、`oya`、`scores: [i32;4]`、`tehais: [[Tile;13];4]` | 开始一局，字段均必需 |
+| `tsumo` | `actor`、`pai` | 摸牌 |
+| `dahai` | `actor`、`pai`、`tsumogiri: bool` | `true` 为摸切，`false` 为手切 |
+| `chi` | `actor`、`target`、`pai`、`consumed: [Tile;2]` | 吃牌；状态机要求来自上家 |
+| `pon` | `actor`、`target`、`pai`、`consumed: [Tile;2]` | 碰牌 |
+| `daiminkan` | `actor`、`target`、`pai`、`consumed: [Tile;3]` | 大明杠 |
+| `kakan` | `actor`、`pai`、`consumed: [Tile;3]` | 加杠，`consumed` 描述原碰 |
+| `ankan` | `actor`、`consumed: [Tile;4]` | 暗杠 |
+| `dora` | `dora_marker` | 新宝牌指示牌公告 |
+| `reach` | `actor` | 宣告立直 |
+| `reach_accepted` | `actor` | 立直成立，与 `reach` 分开 |
+| `hora` | `actor`、`target`、`deltas?: [i32;4]`、`ura_markers?: [Tile]` | 和牌；可连续出现以表示多人和牌 |
+| `ryukyoku` | `deltas?: [i32;4]` | 流局 |
+| `end_kyoku` | 无 | 当前局结束 |
+| `end_game` | 无 | 整场结束 |
 
-- 万子：`1m` ~ `9m`
-- 筒子：`1p` ~ `9p`
-- 索子：`1s` ~ `9s`
+### 关键事件示例
 
-### 3.2 字牌
-
-- `E` 东
-- `S` 南
-- `W` 西
-- `N` 北
-- `P` 白
-- `F` 发
-- `C` 中
-
-### 3.3 赤宝牌
-
-- `5mr`
-- `5pr`
-- `5sr`
-
-### 3.4 未知牌
-
-- `?`
-
-项目内部支持 `?`，但普通对局日志里一般不会主动出现。
-
-## 4. 核心事件类型
-
-下面按 `Event` 枚举中的顺序介绍。
-
-### 4.1 `none`
-
-格式：
+开始整场：
 
 ```json
-{"type":"none"}
+{"type":"start_game","names":["A","B","C","D"],"seed":[123,456]}
 ```
 
-作用：
-
-- 表示“没有动作”或“空动作”。
-
-### 4.2 `start_game`
-
-格式：
-
-```json
-{
-  "type":"start_game",
-  "names":["A","B","C","D"],
-  "seed":[123,456]
-}
-```
-
-字段：
-
-- `names: [string; 4]`
-- `seed: [u64, u64] | null`
-
-说明：
-
-- `names` 缺省时会补默认值
-- `seed` 是可选字段，代码注释写的是 `(nonce, key)`
-
-### 4.3 `start_kyoku`
-
-格式：
+开始一局：
 
 ```json
 {
@@ -177,252 +102,79 @@ start_game
   "oya":0,
   "scores":[25000,25000,25000,25000],
   "tehais":[
-    ["N","3p","W","W","7m","N","S","C","7m","P","8p","2m","5m"],
-    ["7p","1p","2m","3m","4m","C","7s","7s","9s","9p","1m","C","1s"],
-    ["3s","E","5m","P","5m","F","7p","6m","5s","9p","1s","S","N"],
-    ["2p","4s","4p","E","5p","F","3p","1s","8p","6s","8s","7s","5p"]
+    ["1m","2m","3m","4m","5m","6m","7m","8m","9m","1p","2p","3p","E"],
+    ["?","?","?","?","?","?","?","?","?","?","?","?","?"],
+    ["?","?","?","?","?","?","?","?","?","?","?","?","?"],
+    ["?","?","?","?","?","?","?","?","?","?","?","?","?"]
   ]
 }
 ```
 
-字段：
-
-- `bakaze: Tile`
-- `dora_marker: Tile`
-- `kyoku: 1..=4`
-- `honba: u8`
-- `kyotaku: u8`
-- `oya: 0..=3`
-- `scores: [i32; 4]`
-- `tehais: [[Tile; 13]; 4]`
-
-### 4.4 `tsumo`
-
-格式：
-
-```json
-{"type":"tsumo","actor":0,"pai":"1m"}
-```
-
-字段：
-
-- `actor: 0..=3`
-- `pai: Tile`
-
-### 4.5 `dahai`
-
-格式：
-
-```json
-{"type":"dahai","actor":0,"pai":"2m","tsumogiri":true}
-```
-
-字段：
-
-- `actor: 0..=3`
-- `pai: Tile`
-- `tsumogiri: bool`
-
-说明：
-
-- `tsumogiri=true` 表示摸切
-- `tsumogiri=false` 表示手切
-
-### 4.6 `chi`
-
-格式：
+鸣牌：
 
 ```json
 {"type":"chi","actor":1,"target":0,"pai":"6s","consumed":["5sr","7s"]}
+{"type":"pon","actor":2,"target":0,"pai":"C","consumed":["C","C"]}
+{"type":"daiminkan","actor":3,"target":0,"pai":"5p","consumed":["5pr","5p","5p"]}
 ```
 
-字段：
-
-- `actor`
-- `target`
-- `pai`
-- `consumed: [Tile; 2]`
-
-从状态校验逻辑看，`chi` 必须来自上家。
-
-### 4.7 `pon`
-
-格式：
+终局：
 
 ```json
-{"type":"pon","actor":1,"target":0,"pai":"C","consumed":["C","C"]}
-```
-
-字段：
-
-- `actor`
-- `target`
-- `pai`
-- `consumed: [Tile; 2]`
-
-### 4.8 `daiminkan`
-
-格式：
-
-```json
-{"type":"daiminkan","actor":2,"target":0,"pai":"5p","consumed":["5pr","5p","5p"]}
-```
-
-字段：
-
-- `actor`
-- `target`
-- `pai`
-- `consumed: [Tile; 3]`
-
-### 4.9 `kakan`
-
-格式：
-
-```json
-{"type":"kakan","actor":3,"pai":"S","consumed":["S","S","S"]}
-```
-
-字段：
-
-- `actor`
-- `pai`
-- `consumed: [Tile; 3]`
-
-### 4.10 `ankan`
-
-格式：
-
-```json
-{"type":"ankan","actor":0,"consumed":["9m","9m","9m","9m"]}
-```
-
-字段：
-
-- `actor`
-- `consumed: [Tile; 4]`
-
-### 4.11 `dora`
-
-格式：
-
-```json
-{"type":"dora","dora_marker":"3s"}
-```
-
-字段：
-
-- `dora_marker: Tile`
-
-### 4.12 `reach`
-
-格式：
-
-```json
-{"type":"reach","actor":1}
-```
-
-字段：
-
-- `actor`
-
-### 4.13 `reach_accepted`
-
-格式：
-
-```json
-{"type":"reach_accepted","actor":2}
-```
-
-字段：
-
-- `actor`
-
-说明：
-
-- `reach` 和 `reach_accepted` 是分开的两个事件
-
-### 4.14 `hora`
-
-格式：
-
-```json
-{
-  "type":"hora",
-  "actor":3,
-  "target":1,
-  "deltas":[0,-8000,0,9000],
-  "ura_markers":["4p"]
-}
-```
-
-字段：
-
-- `actor`
-- `target`
-- `deltas: [i32; 4] | null`
-- `ura_markers: list[Tile] | null`
-
-说明：
-
-- `deltas` 可选
-- `ura_markers` 可选
-
-### 4.15 `ryukyoku`
-
-格式：
-
-```json
-{"type":"ryukyoku","deltas":[0,1500,0,-1500]}
-```
-
-或：
-
-```json
-{"type":"ryukyoku"}
-```
-
-字段：
-
-- `deltas: [i32; 4] | null`
-
-### 4.16 `end_kyoku`
-
-格式：
-
-```json
+{"type":"hora","actor":3,"target":1,"deltas":[0,-8000,0,9000],"ura_markers":["4p"]}
 {"type":"end_kyoku"}
-```
-
-### 4.17 `end_game`
-
-格式：
-
-```json
 {"type":"end_game"}
 ```
 
-## 5. 项目里额外支持的扩展结构
+## 字段语义与数据要求
 
-除了标准 `Event` 以外，`libriichi` 还定义了两个常用扩展包装。
+### `pai` 与 `consumed`
 
-### 5.1 `EventExt`
+鸣牌事件中：
 
-定义位置：
+- `pai` 是从 `target` 获得或用于加杠的那张牌；
+- `consumed` 是 `actor` 原本持有并被组合使用的牌；
+- 数组长度由事件类型固定，不能用可变长度代替。
 
-- [libriichi/src/mjai/event.rs](/home/tml104/Mortal/libriichi/src/mjai/event.rs)
+状态机不仅检查数组长度，还会验证牌是否在手、吃牌方向和当前是否允许该动作。
 
-格式：
+### `deltas`
+
+`deltas` 是四家的点数变化，按绝对玩家 ID 排列。`Event` 类型允许 `hora`/`ryukyoku` 省略它，方便 Bot 输出“我要和牌/流局”的动作请求；完整结果日志通常需要带上它。
+
+特别是 `libriichi.dataset.Grp` 为了重建最终分数，要求最后一局结果阶段的 `hora` 或 `ryukyoku` 带 `deltas`。因此“Bot 可输出的事件”不一定已经是“可用于训练的完整结果日志”。
+
+### `ura_markers`
+
+只用于 `hora`，记录里宝牌指示牌列表。字段在协议结构上可选。
+
+### 立直是两个事件
+
+```text
+reach -> dahai -> reach_accepted
+```
+
+`reach` 表示声明，`reach_accepted` 表示成立和扣除立直棒。两者不能合并，否则状态、分数和 GRP 特征可能不一致。
+
+### 公告事件
+
+`reach_accepted` 和 `dora` 常插在一个决策动作与下一个实际动作之间。`GameplayLoader` 的动作标签窗口会跳过这两类公告寻找下一动作；不能据此随意删除公告，它们仍会更新状态。
+
+## Mortal 扩展字段
+
+### `meta`
+
+`EventExt` 在普通事件上扁平追加可选 `meta`，用于记录模型推理信息：
 
 ```json
 {
   "type":"dahai",
   "actor":0,
   "pai":"2m",
-  "tsumogiri":true,
+  "tsumogiri":false,
   "meta":{
     "q_values":[1.2,0.3],
-    "mask_bits":123,
+    "mask_bits":5,
     "is_greedy":true,
     "batch_size":1,
     "eval_time_ns":100000,
@@ -433,249 +185,52 @@ start_game
 }
 ```
 
-其中 `meta` 是可选字段，对应：
+| 字段 | 含义 |
+| --- | --- |
+| `q_values` | 按合法 mask 压缩后的 Q 值 |
+| `mask_bits` | 46 位合法动作 bitset |
+| `is_greedy` | 是否由贪心分支选择 |
+| `batch_size` | 本次推理 batch 大小 |
+| `eval_time_ns` | 推理耗时 |
+| `shanten` | 当前向听数 |
+| `at_furiten` | 当前是否振听 |
+| `kan_select` | 杠牌二次牌种选择的嵌套元数据 |
 
-- `q_values: list[float] | null`
-- `mask_bits: u64 | null`
-- `is_greedy: bool | null`
-- `batch_size: usize | null`
-- `eval_time_ns: u64 | null`
-- `shanten: i8 | null`
-- `at_furiten: bool | null`
-- `kan_select: Metadata | null`
+这些字段均可选，不属于状态推进所需的核心事件字段。
 
-作用：
+### `can_act`
 
-- 给原始 mjai 事件附加模型推理元信息
-
-### 5.2 `EventWithCanAct`
-
-定义位置：
-
-- [libriichi/src/mjai/event.rs](/home/tml104/Mortal/libriichi/src/mjai/event.rs)
-
-格式：
+`EventWithCanAct` 允许在任意事件顶层附加：
 
 ```json
-{
-  "type":"tsumo",
-  "actor":0,
-  "pai":"1m",
-  "can_act":false
-}
+{"type":"tsumo","actor":0,"pai":"1m","can_act":false}
 ```
 
-作用：
+`Bot.react(line, can_act=True)` 会先更新状态，再判断是否决策。函数参数为 false，或 JSON 的 `can_act` 明确为 false，都会强制只更新状态并返回 `None`。
 
-- 在普通事件外增加一个可选布尔字段 `can_act`
+## `libriichi.mjai.Bot` 的输入输出
 
-用途：
+Python 调用签名：
 
-- `mjai.Bot.react(...)` 在收到事件后，会检查函数参数里的 `can_act` 和 JSON 中的 `can_act`
-- 如果任一方禁止行动，bot 只更新状态，不返回动作
-
-## 6. 项目里隐含的事件顺序约束
-
-从 `dataset/gameplay.rs`、`mjai/bot.rs`、`state/update.rs` 的使用方式可以看出，这个项目默认日志满足下面这些约束。
-
-### 6.1 整场牌局必须以 `start_game` 开头
-
-否则某些解析逻辑会直接报错。
-
-### 6.2 每局必须有 `start_kyoku`
-
-很多特征提取逻辑都以 `start_kyoku` 为一局的开始。
-
-### 6.3 每局结束后应该出现 `hora` 或 `ryukyoku`
-
-然后再接：
-
-- `end_kyoku`
-
-### 6.4 `reach_accepted` 和 `dora` 常被视作“公告事件”
-
-在 `dataset/gameplay.rs` 中，窗口逻辑会特别跳过：
-
-- `reach_accepted`
-- `dora`
-
-来寻找真正的下一动作事件。
-
-## 7. `target`、`deltas`、`ura_markers` 等字段的实际语义
-
-### 7.1 `target`
-
-在：
-
-- `chi`
-- `pon`
-- `daiminkan`
-- `hora`
-
-里都可能出现 `target`。
-
-通常表示：
-
-- 此次动作针对的是谁的牌 / 谁放铳
-
-### 7.2 `deltas`
-
-出现在：
-
-- `hora`
-- `ryukyoku`
-
-含义是：
-
-- 四家点数变化数组
-
-### 7.3 `ura_markers`
-
-只出现在 `hora` 中，表示里宝指示牌列表。
-
-## 8. `mjai.Bot` 实际接受和输出的格式
-
-在 [libriichi/src/mjai/bot.rs](/home/tml104/Mortal/libriichi/src/mjai/bot.rs) 中：
-
-- `Bot.react(line, can_act=True)` 接收的是一行 JSON 字符串
-- 返回的是一个动作 JSON 字符串或 `None`
-
-也就是说，Python 侧常见交互方式是：
-
-输入：
-
-```json
-{"type":"tsumo","actor":0,"pai":"1m"}
+```python
+reaction = bot.react(line, can_act=True)
 ```
 
-输出：
+- `line`：恰好一条事件的 JSON 字符串；
+- 返回 `str`：当前玩家可行动，内容是动作事件，通常带 `meta`；
+- 返回 `None`：当前不能行动或被 `can_act` 禁止；
+- 非法 JSON、非法时序或非法状态：抛出异常。
 
-```json
-{"type":"dahai","actor":0,"pai":"1m","tsumogiri":true}
-```
+`mortal/mortal.py` 从 stdin 逐行调用该方法，只在返回字符串时写 stdout。复盘模式会为无动作时额外输出带空 mask 的 `none`，这是 Python 入口行为，不是 `Bot.react()` 自身返回值。
 
-## 9. 本项目中最常见的一段日志长什么样
+## 排错顺序
 
-下面是一段典型且合法的简化示例：
+解析或训练日志失败时，按以下顺序检查：
 
-```text
-{"type":"start_game","names":["A","B","C","D"],"seed":[123,456]}
-{"type":"start_kyoku","bakaze":"E","dora_marker":"5s","kyoku":1,"honba":0,"kyotaku":0,"oya":0,"scores":[25000,25000,25000,25000],"tehais":[["N","3p","W","W","7m","N","S","C","7m","P","8p","2m","5m"],["7p","1p","2m","3m","4m","C","7s","7s","9s","9p","1m","C","1s"],["3s","E","5m","P","5m","F","7p","6m","5s","9p","1s","S","N"],["2p","4s","4p","E","5p","F","3p","1s","8p","6s","8s","7s","5p"]]}
-{"type":"tsumo","actor":0,"pai":"1m"}
-{"type":"dahai","actor":0,"pai":"2m","tsumogiri":true}
-{"type":"chi","actor":1,"target":0,"pai":"6s","consumed":["5sr","7s"]}
-{"type":"reach","actor":1}
-{"type":"reach_accepted","actor":1}
-{"type":"hora","actor":3,"target":1,"deltas":[0,-8000,0,9000],"ura_markers":["4p"]}
-{"type":"end_kyoku"}
-{"type":"end_game"}
-```
-
-## 10. 一句话总结
-
-如果只记一句话，可以记成：
-
-> 在这个项目里，`mjai` 就是“按时间顺序逐行排列的一组 JSON 事件”，每条事件由 `type` 区分，牌用 `1m/5pr/E/C` 这类字符串表示；在此基础上，项目还扩展支持了 `meta` 和 `can_act` 两种额外包装字段，用于模型分析和控制 bot 是否出手。
-
-## 11. 其他示例
-
-Mortal官方给出的一个示例：
-
-```
-{"type":"start_game"}
-{"type":"start_kyoku","bakaze":"E","dora_marker":"3s","kyoku":3,"honba":0,"kyotaku":0,"oya":2,"scores":[22000,23700,26000,28300],"tehais":[["?","?","?","?","?","?","?","?","?","?","?","?","?"],["?","?","?","?","?","?","?","?","?","?","?","?","?"],["1m","1m","4m","5m","1p","5p","8p","1s","4s","4s","6s","8s","N"],["?","?","?","?","?","?","?","?","?","?","?","?","?"]]}
-{"type":"tsumo","actor":2,"pai":"6p"}
-{"type":"dahai","actor":2,"pai":"1s","tsumogiri":false}
-{"type":"tsumo","actor":3,"pai":"?"}
-{"type":"dahai","actor":3,"pai":"1s","tsumogiri":false}
-{"type":"tsumo","actor":0,"pai":"?"}
-{"type":"dahai","actor":0,"pai":"9s","tsumogiri":false}
-{"type":"tsumo","actor":1,"pai":"?"}
-{"type":"dahai","actor":1,"pai":"9p","tsumogiri":false}
-{"type":"tsumo","actor":2,"pai":"3s"}
-{"type":"dahai","actor":2,"pai":"N","tsumogiri":false}
-{"type":"tsumo","actor":3,"pai":"?"}
-{"type":"dahai","actor":3,"pai":"9m","tsumogiri":false}
-{"type":"tsumo","actor":0,"pai":"?"}
-{"type":"dahai","actor":0,"pai":"1m","tsumogiri":false}
-{"type":"tsumo","actor":1,"pai":"?"}
-{"type":"dahai","actor":1,"pai":"1s","tsumogiri":false}
-{"type":"tsumo","actor":2,"pai":"7s"}
-{"type":"dahai","actor":2,"pai":"1p","tsumogiri":false}
-{"type":"tsumo","actor":3,"pai":"?"}
-{"type":"dahai","actor":3,"pai":"W","tsumogiri":false}
-{"type":"tsumo","actor":0,"pai":"?"}
-{"type":"dahai","actor":0,"pai":"1p","tsumogiri":false}
-{"type":"tsumo","actor":1,"pai":"?"}
-{"type":"dahai","actor":1,"pai":"W","tsumogiri":false}
-{"type":"pon","actor":0,"target":1,"pai":"W","consumed":["W","W"]}
-{"type":"dahai","actor":0,"pai":"2p","tsumogiri":false}
-{"type":"tsumo","actor":1,"pai":"?"}
-{"type":"dahai","actor":1,"pai":"9s","tsumogiri":false}
-{"type":"tsumo","actor":2,"pai":"P"}
-{"type":"dahai","actor":2,"pai":"8p","tsumogiri":false}
-{"type":"tsumo","actor":3,"pai":"?"}
-{"type":"dahai","actor":3,"pai":"C","tsumogiri":false}
-{"type":"tsumo","actor":0,"pai":"?"}
-{"type":"dahai","actor":0,"pai":"9p","tsumogiri":false}
-{"type":"tsumo","actor":1,"pai":"?"}
-{"type":"dahai","actor":1,"pai":"1s","tsumogiri":true}
-{"type":"tsumo","actor":2,"pai":"7m"}
-{"type":"dahai","actor":2,"pai":"7m","tsumogiri":true}
-{"type":"tsumo","actor":3,"pai":"?"}
-{"type":"dahai","actor":3,"pai":"7p","tsumogiri":false}
-{"type":"tsumo","actor":0,"pai":"?"}
-{"type":"dahai","actor":0,"pai":"C","tsumogiri":false}
-{"type":"tsumo","actor":1,"pai":"?"}
-{"type":"dahai","actor":1,"pai":"2s","tsumogiri":true}
-{"type":"tsumo","actor":2,"pai":"6s"}
-{"type":"dahai","actor":2,"pai":"6s","tsumogiri":true}
-{"type":"tsumo","actor":3,"pai":"?"}
-{"type":"dahai","actor":3,"pai":"E","tsumogiri":true}
-{"type":"pon","actor":1,"target":3,"pai":"E","consumed":["E","E"]}
-{"type":"dahai","actor":1,"pai":"2m","tsumogiri":false}
-{"type":"tsumo","actor":2,"pai":"7p"}
-{"type":"dahai","actor":2,"pai":"P","tsumogiri":false}
-{"type":"tsumo","actor":3,"pai":"?"}
-{"type":"dahai","actor":3,"pai":"8s","tsumogiri":false}
-{"type":"tsumo","actor":0,"pai":"?"}
-{"type":"dahai","actor":0,"pai":"E","tsumogiri":false}
-{"type":"tsumo","actor":1,"pai":"?"}
-{"type":"dahai","actor":1,"pai":"4p","tsumogiri":false}
-{"type":"tsumo","actor":2,"pai":"8p"}
-{"type":"dahai","actor":2,"pai":"8p","tsumogiri":true}
-{"type":"tsumo","actor":3,"pai":"?"}
-{"type":"dahai","actor":3,"pai":"9s","tsumogiri":false}
-{"type":"tsumo","actor":0,"pai":"?"}
-{"type":"dahai","actor":0,"pai":"S","tsumogiri":true}
-{"type":"tsumo","actor":1,"pai":"?"}
-{"type":"dahai","actor":1,"pai":"6s","tsumogiri":false}
-{"type":"tsumo","actor":2,"pai":"9m"}
-{"type":"dahai","actor":2,"pai":"9m","tsumogiri":true}
-{"type":"tsumo","actor":3,"pai":"?"}
-{"type":"dahai","actor":3,"pai":"2p","tsumogiri":false}
-{"type":"tsumo","actor":0,"pai":"?"}
-{"type":"dahai","actor":0,"pai":"2s","tsumogiri":true}
-{"type":"tsumo","actor":1,"pai":"?"}
-{"type":"dahai","actor":1,"pai":"8p","tsumogiri":true}
-{"type":"tsumo","actor":2,"pai":"F"}
-{"type":"dahai","actor":2,"pai":"F","tsumogiri":true}
-{"type":"tsumo","actor":3,"pai":"?"}
-{"type":"dahai","actor":3,"pai":"4p","tsumogiri":true}
-{"type":"tsumo","actor":0,"pai":"?"}
-{"type":"dahai","actor":0,"pai":"4m","tsumogiri":true}
-{"type":"tsumo","actor":1,"pai":"?"}
-{"type":"dahai","actor":1,"pai":"S","tsumogiri":true}
-{"type":"tsumo","actor":2,"pai":"5mr"}
-{"type":"dahai","actor":2,"pai":"5m","tsumogiri":false}
-{"type":"tsumo","actor":3,"pai":"?"}
-{"type":"reach","actor":3}
-{"type":"dahai","actor":3,"pai":"N","tsumogiri":false}
-{"type":"reach_accepted","actor":3}
-{"type":"tsumo","actor":0,"pai":"?"}
-{"type":"dahai","actor":0,"pai":"N","tsumogiri":false}
-{"type":"tsumo","actor":1,"pai":"?"}
-{"type":"dahai","actor":1,"pai":"F","tsumogiri":false}
-{"type":"tsumo","actor":2,"pai":"9p"}
-```
-
+1. 每一行是否是独立且完整的 JSON；
+2. `type` 名是否为 snake_case；
+3. 牌字符串、玩家 ID、`kyoku` 和定长数组是否满足范围；
+4. 是否以 `start_game` 开始，每局是否有完整开始/结果/结束事件；
+5. `reach`、`reach_accepted`、`dora` 的顺序是否保留；
+6. 最后一局结果是否带 `deltas`；
+7. 动作是否与此前状态、手牌和合法候选一致。
