@@ -8,3 +8,4 @@ dependencies:
     - tqdm
     - toml
     - tensorboard
+    - zstandard>=0.23,<1

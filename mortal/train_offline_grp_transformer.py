@@ -668,8 +668,8 @@ def train_batch(
     obs, actions, masks, steps_to_done, kyoku_rewards, player_ranks = batch
     batch_size = obs.shape[0]
 
-    cpu_row_indices = torch.arange(batch_size)
-    if not masks[cpu_row_indices, actions].all():
+    validation_rows = torch.arange(batch_size, device=masks.device)
+    if not masks[validation_rows, actions].all():
         raise RuntimeError('数据集中存在不合法动作，拒绝继续训练')
 
     obs = obs.to(dtype=torch.float32, device=device, non_blocking=True)

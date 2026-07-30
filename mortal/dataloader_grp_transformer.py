@@ -168,6 +168,7 @@ class FileDatasetsIter(BaseFileDatasetsIter):
     def __init__(self, *args, grp_config=None, **kwargs):
         """保存可随 spawn worker 传递的 GRP 配置快照。"""
         super().__init__(*args, **kwargs)
+        self.invalid_action_samples = 0
         source = grp_config or config['grp_transformer']
         self.grp_config = {
             'state_file': source['state_file'],
@@ -175,8 +176,8 @@ class FileDatasetsIter(BaseFileDatasetsIter):
             'network': dict(source['network']),
         }
 
-    def build_iter(self):
-        """在 DataLoader worker 内加载 GRP，避免跨进程传递 PyTorch 模型。"""
+    def initialize_grp_model(self):
+        """在当前进程加载冻结 GRP，供训练 worker 和预处理器复用。"""
         grp_cfg = self.grp_config
         state_file = grp_cfg['state_file']
 
@@ -210,6 +211,10 @@ class FileDatasetsIter(BaseFileDatasetsIter):
             state_file,
             state.get('steps', 'unknown'),
         )
+
+    def build_iter(self):
+        """在 DataLoader worker 内加载 GRP，避免跨进程传递 PyTorch 模型。"""
+        self.initialize_grp_model()
 
         for _ in range(self.num_epochs):
             yield from self.load_files(self.augmented_first)
@@ -275,84 +280,90 @@ class FileDatasetsIter(BaseFileDatasetsIter):
                 loaded_data.append(file_data[0])
             return loaded_files, loaded_data
 
+    def iter_file_samples(self, filename, file_games):
+        """把单个牌谱转换为带来源定位信息的合法训练样本。"""
+        shared = None
+        shared_feature = None
+
+        for game in file_games:
+            obs = game.take_obs()
+            if self.oracle:
+                invisible_obs = game.take_invisible_obs()
+            actions = game.take_actions()
+            masks = game.take_masks()
+            at_kyoku = game.take_at_kyoku()
+            dones = game.take_dones()
+            apply_gamma = game.take_apply_gamma()
+
+            grp = game.take_grp()
+            player_id = game.take_player_id()
+            grp_feature = grp.take_feature()
+            rank_by_player = grp.take_rank_by_player()
+            final_scores = grp.take_final_scores()
+
+            if shared is None:
+                shared_feature = grp_feature.copy()
+                shared = self._build_shared_grp_targets(
+                    grp_feature,
+                    rank_by_player,
+                    final_scores,
+                )
+            else:
+                cached_ranks, cached_scores, _, _ = shared
+                current_ranks = np.fromiter(rank_by_player, dtype=np.int64, count=4)
+                current_scores = np.asarray(final_scores, dtype=np.int64)
+                if (
+                    not np.array_equal(grp_feature, shared_feature)
+                    or not np.array_equal(current_ranks, cached_ranks)
+                    or not np.array_equal(current_scores, cached_scores)
+                ):
+                    raise RuntimeError('同一日志的玩家视角包含不一致的 GRP 数据')
+
+            _, _, kyoku_rewards_by_player, rank_by_player_seq = shared
+            kyoku_rewards = kyoku_rewards_by_player[:, player_id]
+            player_ranks = rank_by_player_seq[:, player_id]
+            game_size = len(obs)
+            if len(kyoku_rewards) < at_kyoku[-1] + 1:
+                raise RuntimeError('GRP 奖励序列短于训练样本所需的局数')
+
+            steps_to_done = np.zeros(game_size, dtype=np.int64)
+            for i in reversed(range(game_size)):
+                if not dones[i]:
+                    steps_to_done[i] = steps_to_done[i + 1] + int(apply_gamma[i])
+
+            for i in range(game_size):
+                action = int(actions[i])
+                mask = masks[i]
+                if action < 0 or action >= len(mask) or not bool(mask[action]):
+                    self.invalid_action_samples += 1
+                    logging.warning(
+                        'skipped invalid-action sample: file=%s player_id=%s '
+                        'sample_idx=%s action=%s legal_actions=%s',
+                        filename,
+                        player_id,
+                        i,
+                        action,
+                        np.flatnonzero(mask).tolist(),
+                    )
+                    continue
+                entry = [
+                    obs[i],
+                    action,
+                    mask,
+                    steps_to_done[i],
+                    kyoku_rewards[at_kyoku[i]],
+                    player_ranks[at_kyoku[i] + 1],
+                ]
+                if self.oracle:
+                    entry.insert(1, invisible_obs[i])
+                yield entry, int(player_id), i
+
     def populate_buffer(self, file_list):
         """加载日志，并让同一日志的所有玩家视角复用 Transformer 前向结果。"""
         loaded_files, data = self._load_files_with_quarantine(file_list)
         for filename, file_games in zip(loaded_files, data, strict=True):
-            shared = None
-            shared_feature = None
-
-            for game in file_games:
-                obs = game.take_obs()
-                if self.oracle:
-                    invisible_obs = game.take_invisible_obs()
-                actions = game.take_actions()
-                masks = game.take_masks()
-                at_kyoku = game.take_at_kyoku()
-                dones = game.take_dones()
-                apply_gamma = game.take_apply_gamma()
-
-                grp = game.take_grp()
-                player_id = game.take_player_id()
-                grp_feature = grp.take_feature()
-                rank_by_player = grp.take_rank_by_player()
-                final_scores = grp.take_final_scores()
-
-                if shared is None:
-                    shared_feature = grp_feature.copy()
-                    shared = self._build_shared_grp_targets(
-                        grp_feature,
-                        rank_by_player,
-                        final_scores,
-                    )
-                else:
-                    cached_ranks, cached_scores, _, _ = shared
-                    current_ranks = np.fromiter(rank_by_player, dtype=np.int64, count=4)
-                    current_scores = np.asarray(final_scores, dtype=np.int64)
-                    if (
-                        not np.array_equal(grp_feature, shared_feature)
-                        or not np.array_equal(current_ranks, cached_ranks)
-                        or not np.array_equal(current_scores, cached_scores)
-                    ):
-                        raise RuntimeError('同一日志的玩家视角包含不一致的 GRP 数据')
-
-                _, _, kyoku_rewards_by_player, rank_by_player_seq = shared
-                kyoku_rewards = kyoku_rewards_by_player[:, player_id]
-                player_ranks = rank_by_player_seq[:, player_id]
-                game_size = len(obs)
-                if len(kyoku_rewards) < at_kyoku[-1] + 1:
-                    raise RuntimeError('GRP 奖励序列短于训练样本所需的局数')
-
-                steps_to_done = np.zeros(game_size, dtype=np.int64)
-                for i in reversed(range(game_size)):
-                    if not dones[i]:
-                        steps_to_done[i] = steps_to_done[i + 1] + int(apply_gamma[i])
-
-                for i in range(game_size):
-                    action = int(actions[i])
-                    mask = masks[i]
-                    if action < 0 or action >= len(mask) or not bool(mask[action]):
-                        logging.warning(
-                            'skipped invalid-action sample: file=%s player_id=%s '
-                            'sample_idx=%s action=%s legal_actions=%s',
-                            filename,
-                            player_id,
-                            i,
-                            action,
-                            np.flatnonzero(mask).tolist(),
-                        )
-                        continue
-                    entry = [
-                        obs[i],
-                        action,
-                        mask,
-                        steps_to_done[i],
-                        kyoku_rewards[at_kyoku[i]],
-                        player_ranks[at_kyoku[i] + 1],
-                    ]
-                    if self.oracle:
-                        entry.insert(1, invisible_obs[i])
-                    self.buffer.append(entry)
+            for entry, _, _ in self.iter_file_samples(filename, file_games):
+                self.buffer.append(entry)
 
 
 __all__ = [

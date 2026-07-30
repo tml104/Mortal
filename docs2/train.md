@@ -204,6 +204,59 @@ next_rank_loss = CrossEntropy(AuxNet(phi), player_rank)
 
 每次评测计算展示用的 `[90, 45, 0, -135]` pt。只有同时满足 `avg_pt` 不下降且 `avg_rank` 不上升时，才把当前状态复制到 `best_state_file`。
 
+## 实验性预计算训练缓存
+
+`precompute_grp_transformer_cache.py` 用于把“解析牌谱、构造 observation、运行 Transformer GRP、计算奖励”从重复训练中提前到一次性预处理。它复用 `dataloader_grp_transformer.py` 的样本构造逻辑，输出仍是：
+
+```text
+obs, action, mask, steps_to_done, kyoku_reward, player_rank
+```
+
+缓存不会保存体积很大的 dense float32 observation。每个 chunk 会自动把 1012 个 plane 分为全零、全一、逐样本常量二值、逐样本常量连续值、普通二值和普通连续值六类；已知常量不保存，二值使用 bit-pack，连续值使用 float16，最后用 Zstd level 1 压缩。reward 保留 float64，action、mask、步数和顺位使用足够表示其值域的整数类型。训练读取时由 `PackedCacheBatchIterator` 在 CPU 或 GPU 上恢复 dense float32 observation，缓存 chunk 与训练 batch size 相互独立。
+
+预处理会生成：
+
+| 文件 | 作用 |
+| --- | --- |
+| `progress.json` | 记录下一个文件和 chunk，供 `--resume` 断点恢复。 |
+| `source_files.json` | 固定 seed 选中的源文件及大小、修改时间。 |
+| `chunks.jsonl` | 逐 chunk 的样本数、压缩统计、量化误差和 SHA256。 |
+| `chunks/*.npz.zst` | 实际 packed 数组。 |
+| `validation/*.json` | 从原始 float32 样本和解码结果得到的抽样验证记录。 |
+| `manifest.json` | 仅在全部 chunk 回读验证成功后产生的完整缓存入口。 |
+
+缓存契约还记录 observation 版本、奖励参数、GRP 权重摘要和关键实现文件摘要。源文件、权重或实现变化后，不应把旧缓存静默当作等价数据。预处理只读取源牌谱，不会调用训练加载器的自动隔离移动逻辑。
+
+固定选择 10,000 个文件进行实验：
+
+```bash
+MORTAL_CFG=/absolute/path/config.toml \
+RAYON_NUM_THREADS=6 \
+python mortal/precompute_grp_transformer_cache.py \
+  --output-dir artifacts/precompute_optimize_10k_v1 \
+  --file-count 10000 \
+  --selection-seed 20260721 \
+  --files-per-chunk 6 \
+  --compression-level 1 \
+  --validation-samples-per-chunk 6
+```
+
+若进程中断，确认配置和实现没有变化后，在相同命令末尾添加 `--resume`；不要删除已经完成的 chunk。`manifest.json` 的 `status` 必须为 `complete` 才能用于读取和基准。
+
+使用现有 checkpoint 的内存副本测量缓存供数和训练吞吐：
+
+```bash
+MORTAL_CFG=/absolute/path/config.toml \
+python mortal/benchmark_precomputed_cache.py \
+  --manifest artifacts/precompute_optimize_10k_v1/manifest.json \
+  --checkpoint /absolute/path/latest.pth \
+  --device cuda:0 \
+  --batch-size 1024 \
+  --training-steps 250
+```
+
+该基准不会回写 checkpoint。当前实现是预处理格式、迭代器和端到端训练的实验验证，尚未接入 `train_offline_grp_transformer.py` 的长期 checkpoint/epoch 恢复流程；也不能把 10,000 文件实验缓存当成完整数据集。
+
 ## 主策略在线训练
 
 在线训练至少需要三个长期进程，共用一份完整配置：
