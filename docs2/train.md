@@ -257,6 +257,21 @@ python mortal/benchmark_precomputed_cache.py \
 
 该基准不会回写 checkpoint。当前实现是预处理格式、迭代器和端到端训练的实验验证，尚未接入 `train_offline_grp_transformer.py` 的长期 checkpoint/epoch 恢复流程；也不能把 10,000 文件实验缓存当成完整数据集。
 
+需要把一个完整缓存训练一次并保存模型时，使用专用入口：
+
+```bash
+MORTAL_CFG=/absolute/path/config.toml \
+python mortal/train_precomputed_cache.py \
+  --manifest artifacts/precompute_optimize_10k_v1/manifest.json \
+  --initial-checkpoint /absolute/path/latest.pth \
+  --output-dir artifacts/mortal_precomputed_10k_epoch1_v1 \
+  --device cuda:0 \
+  --batch-size 1024 \
+  --shuffle-seed 20260804
+```
+
+该入口按固定 seed 打乱 chunk 和 chunk 内样本，恰好遍历 manifest 一次并保留最后不足一个 batch 的样本。输出目录包含 `latest.pth`、`train.log`、TensorBoard、运行契约和 `epoch_1.completed.json`。新 checkpoint 使用独立 schema，不能被原始文件偏移训练器直接恢复；中断后只能在输入和实现摘要不变时用相同命令加 `--resume` 继续。
+
 ## 主策略在线训练
 
 在线训练至少需要三个长期进程，共用一份完整配置：
