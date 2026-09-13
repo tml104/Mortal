@@ -16,7 +16,8 @@ Rust 层负责“麻将规则和数据表达”，Python 层负责“如何学�
 | 想了解什么 | 阅读文档 |
 | --- | --- |
 | 仓库整体结构和入口 | 本文 |
-| 神经网络、张量和版本差异 | [network.md](network.md) |
+| 模型的数据流、结构和版本差异 | [network.md](network.md) |
+| 深度学习基础概念与用到的网络介绍 | [deep_learning_basics.md](deep_learning_basics.md) |
 | 主策略离线/在线训练 | [train.md](train.md) |
 | GRP 的前缀样本和变长序列 | [train_grp_1.md](train_grp_1.md) |
 | 主干训练奖励如何生成 | [rewards.md](rewards.md) |
@@ -42,23 +43,61 @@ Rust 层负责“麻将规则和数据表达”，Python 层负责“如何学�
 
 根目录 Rust workspace 包含 `libriichi` 和 `exe-wrapper`。`libriichi` 同时生成 Rust 库和 Python 动态扩展；Python 代码并没有重新实现麻将规则。
 
-## Python 入口
+## Python 脚本与模块
+
+以下文件既包括可直接运行的入口，也包括被入口复用的模型、数据和基础设施模块。名称中带有 `grp_transformer` 的主策略训练脚本，是“使用冻结的 Transformer GRP 计算奖励”，不是继续训练 GRP Transformer 本身。
+
+### 推理与模型
 
 | 文件 | 用途 |
 | --- | --- |
-| [`mortal.py`](../mortal/mortal.py) | 从 stdin 读取 mjai 事件，向 stdout 输出动作 |
-| [`engine.py`](../mortal/engine.py) | 批量模型推理、合法动作屏蔽和采样 |
-| [`model.py`](../mortal/model.py) | `Brain`、`DQN`、`AuxNet`、`GRP`、`GRP_Transformer` |
-| [`train.py`](../mortal/train.py) | 主策略离线/在线训练 |
-| [`train_grp.py`](../mortal/train_grp.py) | GRU 版顺位预测训练 |
-| [`train_grp_transformer.py`](../mortal/train_grp_transformer.py) | Transformer 版顺位预测实验训练 |
-| [`dataloader.py`](../mortal/dataloader.py) | 主策略日志加载、奖励计算和样本组装 |
-| [`server.py`](../mortal/server.py) | 在线训练参数分发和 replay 缓冲 |
-| [`client.py`](../mortal/client.py) | 拉取参数、自对战并上传 replay |
-| [`player.py`](../mortal/player.py) | 训练和测试对局封装 |
-| [`one_vs_three.py`](../mortal/one_vs_three.py) | 独立一对三评测 |
+| [`mortal.py`](../mortal/mortal.py) | mjai Bot 推理入口：从 stdin 逐行读取事件、更新玩家状态并向 stdout 输出动作；复盘模式还会加载 GRU 版 `GRP` 输出顺位信息 |
+| [`engine.py`](../mortal/engine.py) | `MortalEngine` 批量推理：执行 `Brain + DQN`、合法动作屏蔽、贪心或 Boltzmann/top-p 采样；另含用于对战接口的摸切示例引擎 |
+| [`model.py`](../mortal/model.py) | 定义共享网络组件以及 `Brain`、`DQN`、`AuxNet`、GRU 版 `GRP` 和实验性 `GRP_Transformer` |
 
-Python 文件采用同目录平铺导入，通常从仓库根目录执行脚本。不要把单个文件改成包式相对导入，除非同时迁移整个目录结构。
+### 训练、数据与预计算
+
+后续新增的 Transformer-GRP 实验链路集中在 `mortal/transformer_pipeline/`，与原始
+Mortal 入口分开。该目录仍按文件路径直接启动脚本，不使用 `python -m` 包式入口。
+
+| 文件 | 用途 |
+| --- | --- |
+| [`train.py`](../mortal/train.py) | 通用主策略训练入口：支持离线日志训练和在线 replay 训练，更新 `Brain + DQN + AuxNet`，并使用冻结的 GRU 版 `GRP` 估计局间奖励 |
+| [`dataloader.py`](../mortal/dataloader.py) | 通用主策略流式数据集：调用 Rust `GameplayLoader` 解析牌谱，使用 GRU 版 `GRP` 计算奖励并组装逐动作训练样本 |
+| [`reward_calculator.py`](../mortal/reward_calculator.py) | 把 GRP 的最终顺位概率转换为相邻局之间的期望 pt 变化，也提供实际点棒变化计算 |
+| [`train_grp.py`](../mortal/train_grp.py) | 训练 GRU 版顺位预测模型：构造对局历史前缀、执行训练与验证并保存可恢复 checkpoint |
+| [`train_grp_transformer.py`](../mortal/transformer_pipeline/train_grp_transformer.py) | 训练实验性 Transformer 顺位预测模型：使用 padding mask 处理变长历史前缀，并独立保存模型和优化器状态 |
+| [`dataloader_grp_transformer.py`](../mortal/transformer_pipeline/dataloader_grp_transformer.py) | Transformer-GRP 主策略数据集：复用通用加载器，以冻结的 `GRP_Transformer` 计算奖励，并让同一牌谱四个玩家视角共享一次 GRP 前向结果 |
+| [`train_offline_grp_transformer.py`](../mortal/transformer_pipeline/train_offline_grp_transformer.py) | 使用 Transformer GRP 奖励的首个完整离线 epoch 训练器：按文件分片训练，支持严格训练契约、分片 checkpoint、断点恢复和完成状态校验 |
+| [`train_offline_grp_transformer_bs1024.py`](../mortal/transformer_pipeline/train_offline_grp_transformer_bs1024.py) | 上述离线训练器的 batch size 1024 专用启动包装器：固定输出目录，提前设置 Rayon 线程和随机种子，并记录 CUDA 峰值显存；不包含另一套训练循环 |
+| [`precompute_grp_transformer_cache.py`](../mortal/transformer_pipeline/precompute_grp_transformer_cache.py) | 预计算缓存生产入口：提前完成牌谱解析、observation 构造、Transformer GRP 推理和奖励计算，按 chunk 压缩落盘并生成可恢复进度、校验记录和最终 manifest |
+| [`precomputed_cache.py`](../mortal/transformer_pipeline/precomputed_cache.py) | 预计算缓存格式与读取模块：按 observation plane 分类编码，使用 bit-pack、float16 和 Zstd 压缩，并在 CPU 或 GPU 上解码为训练 batch |
+| [`train_precomputed_cache.py`](../mortal/transformer_pipeline/train_precomputed_cache.py) | 预计算缓存专用训练入口：从完整 manifest 确定性打乱并恰好遍历缓存一次，复用 Transformer-GRP 离线训练器的模型和单 batch 优化逻辑，使用独立 checkpoint schema 支持恢复 |
+
+### 评测与性能基准
+
+| 文件 | 用途 |
+| --- | --- |
+| [`one_vs_three.py`](../mortal/one_vs_three.py) | 独立一对三强度评测入口：加载挑战者与基线模型，通过 Rust arena 运行对局并保存日志 |
+| [`player.py`](../mortal/player.py) | 封装定期评测和在线训练自对战：`TestPlayer` 对固定基线评测，`TrainPlayer` 按 profile 生成带探索的 replay 日志 |
+| [`benchmark_offline_grp_transformer_bs1024.py`](../mortal/transformer_pipeline/benchmark_offline_grp_transformer_bs1024.py) | 传统 Transformer-GRP DataLoader 供数基准：比较 worker 数、每批文件数和 Rayon 线程数组合，同时采集吞吐、CPU 与内存指标 |
+| [`benchmark_precomputed_cache.py`](../mortal/transformer_pipeline/benchmark_precomputed_cache.py) | 预计算缓存基准：分别测量 CPU 解码、GPU 供数和包含前向/反向/优化器更新的端到端训练吞吐，不回写输入 checkpoint |
+
+### 在线训练与公共基础设施
+
+| 文件 | 用途 |
+| --- | --- |
+| [`server.py`](../mortal/server.py) | 在线训练 TCP 服务端：保存最新参数、接收客户端 replay，并把缓冲日志批量转交训练进程 |
+| [`client.py`](../mortal/client.py) | 在线自对战客户端：拉取最新参数、调用 `TrainPlayer` 生成牌谱，并把 replay 上传给服务端 |
+| [`common.py`](../mortal/common.py) | 共享工具：TCP 消息封包/读取、在线训练参数提交和 replay drain、进度条与参数统计 |
+| [`config.py`](../mortal/config.py) | 配置加载模块：优先读取 `MORTAL_CFG` 指定的 TOML，否则读取当前工作目录的 `config.toml` |
+| [`lr_scheduler.py`](../mortal/lr_scheduler.py) | 实现线性 warm-up 后接余弦退火的学习率调度器，并支持步数偏移和按 epoch 周期重置 |
+| [`prelude.py`](../mortal/prelude.py) | 进程初始化辅助模块：配置 stderr 日志和 stdin 编码，并集中处理部分 NumPy/PyTorch 警告 |
+
+Python 文件保持平铺导入，通常从仓库根目录执行脚本；实验目录通过 `_bootstrap.py`
+查找原有 `mortal/` 模块。不要把单个文件改成包式相对导入，除非同时迁移整个目录
+结构。预计算训练仍属于实验链路；它的缓存和 checkpoint schema 与原始文件分片训练器
+相互独立，不能直接混用恢复状态。
 
 ## 四条关键链路
 

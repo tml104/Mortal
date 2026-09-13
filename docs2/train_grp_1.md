@@ -1,6 +1,6 @@
 # 顺位预测训练：样本与变长序列
 
-本文解释 [`train_grp.py`](../mortal/train_grp.py) 和 [`train_grp_transformer.py`](../mortal/train_grp_transformer.py) 如何把一场对局变成训练样本，以及 GRU/Transformer 如何处理不同长度的前缀。
+本文解释 [`train_grp.py`](../mortal/train_grp.py) 和 [`train_grp_transformer.py`](../mortal/transformer_pipeline/train_grp_transformer.py) 如何把一场对局变成训练样本，以及 GRU/Transformer 如何处理不同长度的前缀。
 
 两种模型的共同目标是：
 

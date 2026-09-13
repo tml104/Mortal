@@ -23,6 +23,12 @@ from torch.nn.utils import clip_grad_norm_
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
+from _bootstrap import (
+    MORTAL_DIR,
+    PIPELINE_DIR,
+    POST_PIPELINE_IMPLEMENTATION_SHA256,
+    PRE_PIPELINE_IMPLEMENTATION_SHA256,
+)
 import prelude
 import libriichi
 from common import filtered_trimmed_lines, parameter_count
@@ -328,15 +334,14 @@ def validate_full_file_list(file_list, dataset_cfg):
 
 def build_implementation_manifest():
     """记录会影响样本、奖励或参数更新语义的代码、扩展与运行时版本。"""
-    module_dir = path.dirname(path.abspath(__file__))
     source_files = {
         'train_offline_grp_transformer.py': __file__,
-        'dataloader_grp_transformer.py': path.join(module_dir, 'dataloader_grp_transformer.py'),
-        'dataloader.py': path.join(module_dir, 'dataloader.py'),
-        'model.py': path.join(module_dir, 'model.py'),
-        'reward_calculator.py': path.join(module_dir, 'reward_calculator.py'),
-        'lr_scheduler.py': path.join(module_dir, 'lr_scheduler.py'),
-        'common.py': path.join(module_dir, 'common.py'),
+        'dataloader_grp_transformer.py': PIPELINE_DIR / 'dataloader_grp_transformer.py',
+        'dataloader.py': MORTAL_DIR / 'dataloader.py',
+        'model.py': MORTAL_DIR / 'model.py',
+        'reward_calculator.py': MORTAL_DIR / 'reward_calculator.py',
+        'lr_scheduler.py': MORTAL_DIR / 'lr_scheduler.py',
+        'common.py': MORTAL_DIR / 'common.py',
         'libriichi_extension': libriichi.__file__,
     }
     return {
@@ -401,8 +406,31 @@ def build_training_contract(
     return contract, sha256_json(contract)
 
 
+def is_pipeline_relocation(saved_files, current_files):
+    """判断实现差异是否严格等于本次 Transformer 目录迁移。"""
+    if set(saved_files) != set(current_files):
+        return False
+    for filename in IMPLEMENTATION_MIGRATION_FILES:
+        saved = saved_files.get(filename)
+        current = current_files.get(filename)
+        if not isinstance(saved, dict) or not isinstance(current, dict):
+            return False
+        if saved.get('sha256') != PRE_PIPELINE_IMPLEMENTATION_SHA256.get(filename):
+            return False
+        if current.get('sha256') != POST_PIPELINE_IMPLEMENTATION_SHA256.get(filename):
+            return False
+        if path.abspath(saved.get('path', '')) != str(MORTAL_DIR / filename):
+            return False
+        if path.abspath(current.get('path', '')) != str(PIPELINE_DIR / filename):
+            return False
+    return all(
+        saved_files[filename] == current_files[filename]
+        for filename in saved_files.keys() - IMPLEMENTATION_MIGRATION_FILES
+    )
+
+
 def validate_resume_training_contract(state, current_contract, current_sha256):
-    """仅允许白名单 checkpoint 迁移到当前数据修复实现。"""
+    """仅允许白名单变更或可核验的目录迁移恢复 checkpoint。"""
     saved_sha256 = state.get('training_contract_sha256')
     saved_contract = state.get('training_contract')
     if not isinstance(saved_contract, dict) or sha256_json(saved_contract) != saved_sha256:
@@ -410,8 +438,6 @@ def validate_resume_training_contract(state, current_contract, current_sha256):
     if saved_sha256 == current_sha256:
         return
     migration = ALLOWED_IMPLEMENTATION_MIGRATIONS.get(saved_sha256)
-    if migration is None:
-        raise RuntimeError('关键训练配置已变化，拒绝在同一 epoch 中混用训练语义')
 
     saved_semantics = {
         key: value
@@ -444,6 +470,10 @@ def validate_resume_training_contract(state, current_contract, current_sha256):
             '训练实现迁移包含未授权的文件变化: '
             f'{sorted(changed_files)}'
         )
+    if migration is None:
+        if not is_pipeline_relocation(saved_files, current_files):
+            raise RuntimeError('关键训练配置或实现已变化，拒绝恢复不兼容 checkpoint')
+        migration = 'Transformer 实验链路目录迁移'
     logging.warning(
         'migrating exact legacy training contract %s for %s; '
         'the next checkpoint will persist contract %s',

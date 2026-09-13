@@ -43,7 +43,7 @@ mjai 日志/事件
 | `mortal/mortal.py` | mjai 推理入口，从 stdin 读取事件并向 stdout 输出动作。 |
 | `mortal/train.py` | 主策略的离线/在线训练入口。 |
 | `mortal/train_grp.py` | GRU 版顺位预测模型训练入口。 |
-| `mortal/train_grp_transformer.py` | Transformer 版顺位预测模型训练入口。 |
+| `mortal/transformer_pipeline/` | 后续新增的 Transformer-GRP 训练、离线训练、预计算缓存与基准脚本。 |
 | `mortal/server.py`、`mortal/client.py` | 在线训练的参数服务端和自对战客户端。 |
 | `mortal/one_vs_three.py`、`mortal/player.py` | 强度评测和自对战。 |
 | `exe-wrapper/` | Windows 分发所用的可执行包装器。 |
@@ -59,7 +59,7 @@ mjai 日志/事件
 - `mortal/config.py` 优先读取环境变量 `MORTAL_CFG`，否则读取“当前工作目录”下的 `config.toml`，并非相对脚本目录读取。执行命令时优先从仓库根目录运行，并为非默认配置使用绝对路径。
 - `mortal/config.example.toml` 是主训练、推理和在线训练的完整配置参考，但其中路径多为占位值。根目录 `config.toml` 是当前实验配置，目前只包含 `grp` 和 `grp_transformer`，不能直接用于主干训练或普通推理。
 - 常用环境变量：`MORTAL_CFG` 指定配置；`TRAIN_PLAY_PROFILE` 选择自对战配置（默认 `default`）；`MORTAL_REVIEW_MODE=1` 开启复盘附加输出并要求 GRP 权重。`MORTAL_IS_SUB_PROC` 由 `train.py` 内部管理，不要手动设置。
-- Python 文件采用平铺式同目录导入。除非任务明确要求包结构迁移，否则保留现有导入方式，不要只改单个文件为包式相对导入。
+- Python 文件采用平铺式同目录导入。`mortal/transformer_pipeline/` 通过 `_bootstrap.py` 暴露原有 `mortal/` 模块，仍使用直接文件路径启动；除非任务明确要求包结构迁移，否则不要改成包式相对导入。
 
 ## 首次构建
 
@@ -81,7 +81,7 @@ Windows 构建时应将 `target/release/riichi.dll` 复制为 `mortal/libriichi.
 
 ```bash
 MORTAL_CFG=/absolute/path/config.toml python mortal/train_grp.py
-MORTAL_CFG=/absolute/path/config.toml python mortal/train_grp_transformer.py
+MORTAL_CFG=/absolute/path/config.toml python mortal/transformer_pipeline/train_grp_transformer.py
 MORTAL_CFG=/absolute/path/config.toml python mortal/train.py
 MORTAL_CFG=/absolute/path/config.toml python mortal/mortal.py 0 < log.json
 ```

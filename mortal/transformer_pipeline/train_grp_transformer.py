@@ -1,3 +1,4 @@
+import _bootstrap
 import prelude
 
 import random

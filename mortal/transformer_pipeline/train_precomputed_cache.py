@@ -15,6 +15,10 @@ import numpy as np
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
+from _bootstrap import (
+    POST_PIPELINE_CACHE_TRAINER_SHA256,
+    PRE_PIPELINE_CACHE_TRAINER_SHA256,
+)
 from config import config
 from precomputed_cache import PackedCacheBatchIterator
 from train_offline_grp_transformer import (
@@ -112,6 +116,35 @@ def build_run_contract(args, manifest_file, manifest, initial_checkpoint):
         'trainer_sha256': sha256_file(Path(__file__).resolve()),
     }
     return contract, sha256_json(contract)
+
+
+def validate_resume_run_contract(state, current_contract, current_sha256):
+    """只接受完全一致的契约，或可核验的训练器目录迁移。"""
+    saved_sha256 = state.get('run_contract_sha256')
+    saved_contract = state.get('run_contract')
+    if not isinstance(saved_contract, dict) or sha256_json(saved_contract) != saved_sha256:
+        raise RuntimeError('缓存训练断点内嵌契约与摘要不一致')
+    if saved_sha256 == current_sha256:
+        return False
+
+    saved_semantics = dict(saved_contract)
+    current_semantics = dict(current_contract)
+    saved_trainer = saved_semantics.pop('trainer_sha256', None)
+    current_trainer = current_semantics.pop('trainer_sha256', None)
+    if saved_semantics != current_semantics:
+        raise RuntimeError('缓存训练输入或配置已变化，拒绝恢复')
+    if (
+        saved_trainer != PRE_PIPELINE_CACHE_TRAINER_SHA256
+        or current_trainer != POST_PIPELINE_CACHE_TRAINER_SHA256
+    ):
+        raise RuntimeError('缓存训练实现已变化，拒绝恢复未知版本')
+    logging.warning(
+        'migrating precomputed-cache trainer contract from %s to %s; '
+        'the next checkpoint will persist the relocated implementation',
+        saved_sha256,
+        current_sha256,
+    )
+    return True
 
 
 def create_models(checkpoint, device):
@@ -221,8 +254,7 @@ def train_one_epoch(args, output_dir, manifest_file, manifest, run_contract, con
         saved = torch.load(checkpoint_file, weights_only=True, map_location='cpu')
         if saved.get('schema_version') != CHECKPOINT_SCHEMA:
             raise RuntimeError('输出 checkpoint 不是缓存训练格式')
-        if saved.get('run_contract_sha256') != contract_sha256:
-            raise RuntimeError('训练输入或实现已变化，拒绝恢复')
+        migrated = validate_resume_run_contract(saved, run_contract, contract_sha256)
         source_state, components = create_models(args.initial_checkpoint, device)
         mortal, dqn, aux_net, optimizer, scheduler, scaler = components
         mortal.load_state_dict(saved['mortal'], strict=True)
@@ -232,6 +264,12 @@ def train_one_epoch(args, output_dir, manifest_file, manifest, run_contract, con
         scheduler.load_state_dict(saved['scheduler'])
         scaler.load_state_dict(saved['scaler'])
         progress = dict(saved['epoch_progress'])
+        if migrated:
+            atomic_write_json(output_dir / 'run_config.json', {
+                'run_contract': run_contract,
+                'run_contract_sha256': contract_sha256,
+                'config': config,
+            })
         logging.info(
             'resumed cache epoch: batches=%s samples=%s',
             progress['batches_completed'],
@@ -512,8 +550,7 @@ def run(args):
     if args.resume:
         with open(run_config_file, encoding='utf-8') as f:
             existing = json.load(f)
-        if existing['run_contract_sha256'] != contract_sha256:
-            raise RuntimeError('run_config 与当前输入不一致，拒绝恢复')
+        validate_resume_run_contract(existing, run_contract, contract_sha256)
     else:
         atomic_write_json(run_config_file, {
             'run_contract': run_contract,

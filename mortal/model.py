@@ -24,7 +24,7 @@ class ChannelAttention(nn.Module):
         avg_out = self.shared_mlp(x.mean(-1))
         max_out = self.shared_mlp(x.amax(-1))
         weight = (avg_out + max_out).sigmoid()
-        x = weight.unsqueeze(-1) * x
+        x = weight.unsqueeze(-1) * x # 在weight最后一维扩展后（比如形状从(1,2)变成(1,2,1)）与x相乘，实现通道注意力机制
         return x
 
 class ResBlock(nn.Module):
@@ -188,7 +188,7 @@ class Brain(nn.Module):
 class AuxNet(nn.Module):
     def __init__(self, dims=None):
         super().__init__()
-        self.dims = dims
+        self.dims = dims # 4，仅仅只是用于预测本小局结束时，顺位为1、2、3、4的概率
         self.net = nn.Linear(1024, sum(dims), bias=False)
 
     def forward(self, x):

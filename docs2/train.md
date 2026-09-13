@@ -7,11 +7,14 @@
 | 目标 | 入口 | 配置节 | 主要产物 |
 | --- | --- | --- | --- |
 | 训练 GRU 顺位模型 | [`train_grp.py`](../mortal/train_grp.py) | `[grp]` | GRP checkpoint |
-| 训练 Transformer 顺位模型 | [`train_grp_transformer.py`](../mortal/train_grp_transformer.py) | `[grp_transformer]` | 独立 checkpoint |
+| 训练 Transformer 顺位模型 | [`train_grp_transformer.py`](../mortal/transformer_pipeline/train_grp_transformer.py) | `[grp_transformer]` | 独立 checkpoint |
 | 离线训练主策略 | [`train.py`](../mortal/train.py)，`online=false` | 完整主配置 | `Brain + DQN + AuxNet` checkpoint |
 | 在线训练主策略 | `server.py + client.py + train.py` | 完整主配置 | 持续更新的主策略 checkpoint |
 
 标准主策略数据加载器固定使用 GRU 版 `GRP` 计算奖励。训练好的 `GRP_Transformer` 不能仅通过修改配置路径替代它；需要同时更改数据加载器的模型类和 checkpoint 配置。
+
+Transformer-GRP 的后续实验脚本统一位于 `mortal/transformer_pipeline/`，从仓库根目录
+按新路径直接执行。旧的 `mortal/<脚本>.py` 路径不再保留，也不提供 `python -m` 入口。
 
 ## 配置加载规则
 
@@ -95,7 +98,7 @@ Transformer 版使用相同的 `control`、`dataset` 和 `optim` 形状，但顶
 
 ```bash
 MORTAL_CFG=/absolute/path/config.toml python mortal/train_grp.py
-MORTAL_CFG=/absolute/path/config.toml python mortal/train_grp_transformer.py
+MORTAL_CFG=/absolute/path/config.toml python mortal/transformer_pipeline/train_grp_transformer.py
 ```
 
 两个脚本都会：
@@ -232,7 +235,7 @@ obs, action, mask, steps_to_done, kyoku_reward, player_rank
 ```bash
 MORTAL_CFG=/absolute/path/config.toml \
 RAYON_NUM_THREADS=6 \
-python mortal/precompute_grp_transformer_cache.py \
+python mortal/transformer_pipeline/precompute_grp_transformer_cache.py \
   --output-dir artifacts/precompute_optimize_10k_v1 \
   --file-count 10000 \
   --selection-seed 20260721 \
@@ -241,13 +244,16 @@ python mortal/precompute_grp_transformer_cache.py \
   --validation-samples-per-chunk 6
 ```
 
-若进程中断，确认配置和实现没有变化后，在相同命令末尾添加 `--resume`；不要删除已经完成的 chunk。`manifest.json` 的 `status` 必须为 `complete` 才能用于读取和基准。
+若迁移后启动的进程中断，确认配置和实现没有变化后，可在相同命令末尾添加
+`--resume`；不要删除已经完成的 chunk。迁移前尚未生成 `manifest.json` 的未完成缓存
+无法安全核验旧实现，必须改用新的输出目录重新预计算。迁移前已经完成且
+`manifest.json` 状态为 `complete` 的缓存仍可读取、训练和基准。
 
 使用现有 checkpoint 的内存副本测量缓存供数和训练吞吐：
 
 ```bash
 MORTAL_CFG=/absolute/path/config.toml \
-python mortal/benchmark_precomputed_cache.py \
+python mortal/transformer_pipeline/benchmark_precomputed_cache.py \
   --manifest artifacts/precompute_optimize_10k_v1/manifest.json \
   --checkpoint /absolute/path/latest.pth \
   --device cuda:0 \
@@ -261,7 +267,7 @@ python mortal/benchmark_precomputed_cache.py \
 
 ```bash
 MORTAL_CFG=/absolute/path/config.toml \
-python mortal/train_precomputed_cache.py \
+python mortal/transformer_pipeline/train_precomputed_cache.py \
   --manifest artifacts/precompute_optimize_10k_v1/manifest.json \
   --initial-checkpoint /absolute/path/latest.pth \
   --output-dir artifacts/mortal_precomputed_10k_epoch1_v1 \
@@ -270,7 +276,12 @@ python mortal/train_precomputed_cache.py \
   --shuffle-seed 20260804
 ```
 
-该入口按固定 seed 打乱 chunk 和 chunk 内样本，恰好遍历 manifest 一次并保留最后不足一个 batch 的样本。输出目录包含 `latest.pth`、`train.log`、TensorBoard、运行契约和 `epoch_1.completed.json`。新 checkpoint 使用独立 schema，不能被原始文件偏移训练器直接恢复；中断后只能在输入和实现摘要不变时用相同命令加 `--resume` 继续。
+该入口按固定 seed 打乱 chunk 和 chunk 内样本，恰好遍历 manifest 一次并保留最后不足
+一个 batch 的样本。输出目录包含 `latest.pth`、`train.log`、TensorBoard、运行契约和
+`epoch_1.completed.json`。新 checkpoint 使用独立 schema，不能被原始文件偏移训练器
+直接恢复；中断后只能在输入和实现摘要不变时用相同命令加 `--resume` 继续。迁移前由
+已知版本生成的离线训练和缓存训练断点，仅在配置、运行时、数据及其他实现摘要完全
+一致时允许跨目录恢复；未知版本或额外实现变化仍会被拒绝。
 
 ## 主策略在线训练
 

@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
+import _bootstrap
 from config import config
 from precomputed_cache import (
     PackedCacheBatchIterator,

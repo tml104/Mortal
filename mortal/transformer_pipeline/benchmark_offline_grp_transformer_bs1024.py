@@ -5,6 +5,7 @@ import os
 import random
 import time
 
+import _bootstrap
 from config import config
 from train_offline_grp_transformer import create_data_loader, load_file_list
 
