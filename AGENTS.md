@@ -99,6 +99,7 @@ MORTAL_CFG=/absolute/path/config.toml python mortal/mortal.py 0 < log.json
 - 修改观测编码、动作编号/mask、`ACTION_SPACE`、`GRP_SIZE`、mjai 事件或 PyO3 导出时，必须同时检查 Rust 生产端和 Python 消费端，重点包括 `libriichi/src/consts.rs`、`state/`、`dataset/`、`mortal/model.py`、`mortal/engine.py`、`mortal/dataloader.py`。
 - 算法或状态机行为变化应在相邻 Rust 模块添加回归测试；不要只依赖一次完整训练来判断正确性。
 - `docs/` 与 `docs2/` 定位不同。修改行为或配置后同步更新相关说明，但不要把 `docs2/` 当作自动部署文档。
+- 个人新增文档与工程技能配置统一放在 `docs2/`；技能模板中的 `docs/` 路径在本项目中改为 `docs2/`（例如 `docs2/agents/`、`docs2/adr/`）。`docs/` 保留为上游官方文档目录，除非任务明确要求修改上游文档，否则不向其中新增或迁移个人文档。已约定的根目录 `AGENTS.md`、单一 `CONTEXT.md` 和本地任务目录 `.scratch/` 保持各自位置。
 
 ## 数据、生成物与受保护内容
 
@@ -178,3 +179,17 @@ mdbook build
 ### 潜在的风险或未验证项
 
 - 说明未执行的测试、缺失的环境/数据/权重、兼容性风险；如果没有，也明确写“无”。
+
+## Agent skills
+
+### Issue tracker
+
+任务和规格保存在本地 `.scratch/<feature>/`。创建、读取或更新任务前，阅读 `docs2/agents/issue-tracker.md`。
+
+### Triage labels
+
+分诊使用五种标准角色；分诊任务时，阅读 `docs2/agents/triage-labels.md`，将对应标签写入本地任务的 `Status:` 字段。
+
+### Domain docs
+
+采用 single-context：根目录 `CONTEXT.md` 与 `docs2/adr/`。探索领域、使用领域术语或记录架构决策前，阅读 `docs2/agents/domain.md`。

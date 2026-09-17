@@ -110,13 +110,15 @@ def exclusive_lock(filename):
     ``LOCK_NB`` 会让第二个进程立即失败，不会在后台等待后又意外接管同一组进度文件。
     """
     filename = Path(filename).resolve()
-    filename.parent.mkdir(parents=True, exist_ok=True)
-    with open(filename, 'a+b') as lock:
-        fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    filename.parent.mkdir(parents=True, exist_ok=True) # 确保父目录存在
+    with open(filename, 'a+b') as lock: # 打开锁文件，允许多个进程同时打开但只允许一个进程加锁
+        # 通常不会向锁文件写任何内容。打开文件的主要目的是取得文件描述符lock.fileno()
+        # 锁状态保存在操作系统内核中，不是通过锁文件内容表示的。
+        fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB) # 排他非阻塞锁
         try:
-            yield
+            yield # 然后开始执行 run(args)
         finally:
-            fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
+            fcntl.flock(lock.fileno(), fcntl.LOCK_UN) # 运行完了以后释放锁
 
 
 def append_json_line(filename, value):
@@ -243,7 +245,7 @@ def create_sample_generator():
     ``collect_file_batch`` 直接调用，因此坏文件会令预处理停止，不会触发数据加载器中会
     移动源牌谱的自动隔离流程。
     """
-    dataset = FileDatasetsIter(
+    dataset = FileDatasetsIter( # FileDatasetsIter
         version=config['control']['version'],
         file_list=[],
         pts=config['env']['pts'],
@@ -257,7 +259,7 @@ def create_sample_generator():
     )
     # 普通 DataLoader worker 会在首次迭代时延迟初始化 GRP；预计算没有 DataLoader
     # worker，因此必须在主进程显式完成同一步骤。
-    dataset.initialize_grp_model()
+    dataset.initialize_grp_model() # CPU
     dataset.loader = GameplayLoader(
         version=config['control']['version'],
         oracle=False,
@@ -288,7 +290,7 @@ def collect_file_batch(dataset, filenames, first_file_id):
     # fields 与最终训练样本字段顺序完全相同；先用列表累积不同长度的牌谱，再统一堆叠。
     fields = [[] for _ in range(6)]
     source = {'file_ids': [], 'player_ids': [], 'sample_indices': []}
-    invalid_before = dataset.invalid_action_samples
+    invalid_before = dataset.invalid_action_samples # 记录处理前的非法样本数
     for local_file_id, (filename, file_games) in enumerate(zip(filenames, loaded, strict=True)):
         for entry, player_id, sample_idx in dataset.iter_file_samples(filename, file_games):
             for target, value in zip(fields, entry, strict=True):
@@ -445,7 +447,7 @@ def run(args):
     )
     source_file = output_dir / 'source_files.json'
 
-    if args.resume:
+    if args.resume: # 继续
         # progress 是恢复的权威游标；它不保存模型对象，因为 GRP 是冻结的，可由 contract
         # 指定的 checkpoint 在新进程中重新加载。
         if not progress_file.is_file():
@@ -454,7 +456,7 @@ def run(args):
             progress = json.load(f)
         if progress['contract_sha256'] != contract_sha256:
             raise RuntimeError('预处理输入或实现已变化，拒绝恢复不兼容缓存')
-    else:
+    else: # 初始化
         # 初次运行不覆盖任何已有内容。调用方若要新建不同契约的缓存，必须使用新目录。
         if output_dir.exists() and any(output_dir.iterdir()):
             raise FileExistsError(f'输出目录非空，拒绝覆盖: {output_dir}')
@@ -464,7 +466,7 @@ def run(args):
         progress = {
             'status': 'running',
             'contract_sha256': contract_sha256,
-            'next_file_index': 0,
+            'next_file_index': 0, # 后续程序会从此开始继续处理文件
             'next_chunk_id': 0,
             'total_samples': 0,
             'invalid_action_samples': 0,
