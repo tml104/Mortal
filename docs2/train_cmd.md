@@ -8,7 +8,7 @@ cd /home/tml104/Mortal
 tmux new-session -d -s mortal_transformer_bs1024_epoch1 \
   "exec env MORTAL_CFG=/home/tml104/Mortal/artifacts/mortal_transformer_offline_bs1024_v1/config.toml \
   /home/tml104/miniconda3/envs/mortal/bin/python -u \
-  mortal/transformer_pipeline/train_offline_grp_transformer_bs1024.py \
+  mortal/transformer_pipeline/train_mortal_offline_with_grp_transformer_bs1024.py \
   >> artifacts/mortal_transformer_offline_bs1024_v1/console.log 2>&1"
 ```
 

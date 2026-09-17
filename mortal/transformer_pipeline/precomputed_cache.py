@@ -17,7 +17,7 @@ Torch 恢复训练张量。``PackedCacheBatchIterator`` 在此基础上负责确
 
 本模块只规定缓存载荷及读取顺序。源文件选择、缓存 contract、抽样验证记录和 manifest
 发布由 ``precompute_grp_transformer_cache.py`` 管理；模型优化与 checkpoint 由
-``train_precomputed_cache.py`` 管理。
+``train_with_precomputed_cache.py`` 管理。
 """
 
 import hashlib

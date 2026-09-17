@@ -67,12 +67,12 @@ Mortal 入口分开。该目录仍按文件路径直接启动脚本，不使用 
 | [`reward_calculator.py`](../mortal/reward_calculator.py) | 把 GRP 的最终顺位概率转换为相邻局之间的期望 pt 变化，也提供实际点棒变化计算 |
 | [`train_grp.py`](../mortal/train_grp.py) | 训练 GRU 版顺位预测模型：构造对局历史前缀、执行训练与验证并保存可恢复 checkpoint |
 | [`train_grp_transformer.py`](../mortal/transformer_pipeline/train_grp_transformer.py) | 训练实验性 Transformer 顺位预测模型：使用 padding mask 处理变长历史前缀，并独立保存模型和优化器状态 |
-| [`dataloader_grp_transformer.py`](../mortal/transformer_pipeline/dataloader_grp_transformer.py) | Transformer-GRP 主策略数据集：复用通用加载器，以冻结的 `GRP_Transformer` 计算奖励，并让同一牌谱四个玩家视角共享一次 GRP 前向结果 |
-| [`train_offline_grp_transformer.py`](../mortal/transformer_pipeline/train_offline_grp_transformer.py) | 使用 Transformer GRP 奖励的首个完整离线 epoch 训练器：按文件分片训练，支持严格训练契约、分片 checkpoint、断点恢复和完成状态校验 |
-| [`train_offline_grp_transformer_bs1024.py`](../mortal/transformer_pipeline/train_offline_grp_transformer_bs1024.py) | 上述离线训练器的 batch size 1024 专用启动包装器：固定输出目录，提前设置 Rayon 线程和随机种子，并记录 CUDA 峰值显存；不包含另一套训练循环 |
+| [`dataloader_with_grp_transformer.py`](../mortal/transformer_pipeline/dataloader_with_grp_transformer.py) | Transformer-GRP 主策略数据集：复用通用加载器，以冻结的 `GRP_Transformer` 计算奖励，并让同一牌谱四个玩家视角共享一次 GRP 前向结果 |
+| [`train_mortal_offline_with_grp_transformer.py`](../mortal/transformer_pipeline/train_mortal_offline_with_grp_transformer.py) | 使用 Transformer GRP 奖励的首个完整离线 epoch 训练器：按文件分片训练，支持严格训练契约、分片 checkpoint、断点恢复和完成状态校验 |
+| [`train_mortal_offline_with_grp_transformer_bs1024.py`](../mortal/transformer_pipeline/train_mortal_offline_with_grp_transformer_bs1024.py) | 上述离线训练器的 batch size 1024 专用启动包装器：固定输出目录，提前设置 Rayon 线程和随机种子，并记录 CUDA 峰值显存；不包含另一套训练循环 |
 | [`precompute_grp_transformer_cache.py`](../mortal/transformer_pipeline/precompute_grp_transformer_cache.py) | 预计算缓存生产入口：提前完成牌谱解析、observation 构造、Transformer GRP 推理和奖励计算，按 chunk 压缩落盘并生成可恢复进度、校验记录和最终 manifest |
 | [`precomputed_cache.py`](../mortal/transformer_pipeline/precomputed_cache.py) | 预计算缓存格式与读取模块：按 observation plane 分类编码，使用 bit-pack、float16 和 Zstd 压缩，并在 CPU 或 GPU 上解码为训练 batch |
-| [`train_precomputed_cache.py`](../mortal/transformer_pipeline/train_precomputed_cache.py) | 预计算缓存专用训练入口：从完整 manifest 确定性打乱并恰好遍历缓存一次，复用 Transformer-GRP 离线训练器的模型和单 batch 优化逻辑，使用独立 checkpoint schema 支持恢复 |
+| [`train_with_precomputed_cache.py`](../mortal/transformer_pipeline/train_with_precomputed_cache.py) | 预计算缓存专用训练入口：从完整 manifest 确定性打乱并恰好遍历缓存一次，复用 Transformer-GRP 离线训练器的模型和单 batch 优化逻辑，使用独立 checkpoint schema 支持恢复 |
 
 ### 评测与性能基准
 

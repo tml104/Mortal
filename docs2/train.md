@@ -209,7 +209,7 @@ next_rank_loss = CrossEntropy(AuxNet(phi), player_rank)
 
 ## 实验性预计算训练缓存
 
-`precompute_grp_transformer_cache.py` 用于把“解析牌谱、构造 observation、运行 Transformer GRP、计算奖励”从重复训练中提前到一次性预处理。它复用 `dataloader_grp_transformer.py` 的样本构造逻辑，输出仍是：
+`precompute_grp_transformer_cache.py` 用于把“解析牌谱、构造 observation、运行 Transformer GRP、计算奖励”从重复训练中提前到一次性预处理。它复用 `dataloader_with_grp_transformer.py` 的样本构造逻辑，输出仍是：
 
 ```text
 obs, action, mask, steps_to_done, kyoku_reward, player_rank
@@ -261,13 +261,13 @@ python mortal/transformer_pipeline/benchmark_precomputed_cache.py \
   --training-steps 250
 ```
 
-该基准不会回写 checkpoint。当前实现是预处理格式、迭代器和端到端训练的实验验证，尚未接入 `train_offline_grp_transformer.py` 的长期 checkpoint/epoch 恢复流程；也不能把 10,000 文件实验缓存当成完整数据集。
+该基准不会回写 checkpoint。当前实现是预处理格式、迭代器和端到端训练的实验验证，尚未接入 `train_mortal_offline_with_grp_transformer.py` 的长期 checkpoint/epoch 恢复流程；也不能把 10,000 文件实验缓存当成完整数据集。
 
 需要把一个完整缓存训练一次并保存模型时，使用专用入口：
 
 ```bash
 MORTAL_CFG=/absolute/path/config.toml \
-python mortal/transformer_pipeline/train_precomputed_cache.py \
+python mortal/transformer_pipeline/train_with_precomputed_cache.py \
   --manifest artifacts/precompute_optimize_10k_v1/manifest.json \
   --initial-checkpoint /absolute/path/latest.pth \
   --output-dir artifacts/mortal_precomputed_10k_epoch1_v1 \
@@ -371,3 +371,26 @@ tensorboard --logdir /path/to/tensorboard --port 6006
 7. 先做只读配置/索引核对和小规模目标验证，再启动数天训练。
 
 完整训练、自对战和服务器启动都不是普通冒烟测试：它们会大量占用计算资源并写入或删除配置指定的目录。
+
+### 脚本重命名与恢复兼容
+
+Transformer 奖励路径的数据加载器使用 `dataloader_with_grp_transformer.py`；主策略离线训练入口使用
+`train_mortal_offline_with_grp_transformer.py`，固定 batch 启动器使用
+`train_mortal_offline_with_grp_transformer_bs1024.py`；缓存训练入口使用
+`train_with_precomputed_cache.py`。旧入口不再保留，外部启动命令也需要同步更新。
+
+文件名、路径及源码 SHA256 属于恢复契约。`_rename_compat.py` 只对精确登记的本次重命名版本
+返回历史实现身份，因此契约中仍可能出现旧脚本名和旧路径；它们用于版本校验，不用于导入或打开源码。
+离线训练、bs1024 启动器、缓存训练和预计算缓存都使用这一规则。数据、配置、运行时或其他源码
+变化仍由原有严格校验拒绝，不会因重命名而放宽。此前目录迁移的兼容校验继续保留。
+
+预计算脚本登记了提交版本和本次实施前已有注释的工作区版本，两者分别对应各自改名前的摘要。
+这不会把原本已因其他修改而不兼容的缓存自动变为兼容，也不需要修改已有权重、manifest 或 progress 文件。
+
+从仓库根目录，在已安装训练依赖及 libriichi 扩展的 mortal 环境中运行恢复兼容回归测试：
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s mortal/transformer_pipeline/tests -v
+```
+
+测试只检查源码身份和恢复契约，不启动训练或预计算任务。

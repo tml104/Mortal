@@ -29,11 +29,12 @@ from _bootstrap import (
     POST_PIPELINE_IMPLEMENTATION_SHA256,
     PRE_PIPELINE_IMPLEMENTATION_SHA256,
 )
+from _rename_compat import source_identity
 import prelude
 import libriichi
 from common import filtered_trimmed_lines, parameter_count
 from config import config
-from dataloader_grp_transformer import (
+from dataloader_with_grp_transformer import (
     FileDatasetsIter,
     dataset_file_stat,
     is_quarantined_dataset_file,
@@ -335,8 +336,8 @@ def validate_full_file_list(file_list, dataset_cfg):
 def build_implementation_manifest():
     """记录会影响样本、奖励或参数更新语义的代码、扩展与运行时版本。"""
     source_files = {
-        'train_offline_grp_transformer.py': __file__,
-        'dataloader_grp_transformer.py': PIPELINE_DIR / 'dataloader_grp_transformer.py',
+        'train_mortal_offline_with_grp_transformer.py': __file__,
+        'dataloader_with_grp_transformer.py': PIPELINE_DIR / 'dataloader_with_grp_transformer.py',
         'dataloader.py': MORTAL_DIR / 'dataloader.py',
         'model.py': MORTAL_DIR / 'model.py',
         'reward_calculator.py': MORTAL_DIR / 'reward_calculator.py',
@@ -346,11 +347,9 @@ def build_implementation_manifest():
     }
     return {
         'files': {
-            name: {
-                'path': path.abspath(filename),
-                'sha256': sha256_file(filename),
-            }
+            legacy_name: record
             for name, filename in source_files.items()
+            for legacy_name, record in [source_identity(filename, name)]
         },
         'runtime': {
             'python': sys.version,
@@ -642,7 +641,7 @@ def save_checkpoint(
         'training_contract_sha256': training_contract_sha256,
         'checkpoint_reason': reason,
         'best_perf': {'avg_rank': 4.0, 'avg_pt': -135.0},
-        'trainer': 'train_offline_grp_transformer.py',
+        'trainer': 'train_mortal_offline_with_grp_transformer.py',
         'config': config,
     }
     atomic_torch_save(state, config['control']['state_file'])

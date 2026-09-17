@@ -15,7 +15,7 @@ from precomputed_cache import (
     decode_chunk_torch,
     read_chunk,
 )
-from train_offline_grp_transformer import build_models_and_optimizer, train_batch
+from train_mortal_offline_with_grp_transformer import build_models_and_optimizer, train_batch
 
 
 ESTIMATED_FULL_DATASET_SAMPLES = 838_885_333

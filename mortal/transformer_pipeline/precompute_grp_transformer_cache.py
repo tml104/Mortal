@@ -8,7 +8,7 @@ mjai 日志、推进四家状态、构造 observation 和合法动作 mask、运
 ``obs, action, mask, steps_to_done, kyoku_reward, player_rank``
 
 按若干源文件组成一个 chunk，交给 ``precomputed_cache.encode_chunk`` 做 plane-aware
-编码和 Zstd 压缩。后续 ``train_precomputed_cache.py`` 只需读取 chunk、在目标设备上
+编码和 Zstd 压缩。后续 ``train_with_precomputed_cache.py`` 只需读取 chunk、在目标设备上
 恢复 dense 张量，再复用原离线训练器的单 batch 优化逻辑。
 
 预处理过程还维护三层一致性信息：
@@ -39,8 +39,9 @@ from pathlib import Path
 import numpy as np
 
 from _bootstrap import MORTAL_DIR, REPOSITORY_ROOT
+from _rename_compat import source_identity
 from config import config
-from dataloader_grp_transformer import FileDatasetsIter, is_quarantined_dataset_file
+from dataloader_with_grp_transformer import FileDatasetsIter, is_quarantined_dataset_file
 from libriichi.dataset import GameplayLoader
 from precomputed_cache import (
     CACHE_SCHEMA_VERSION,
@@ -51,7 +52,7 @@ from precomputed_cache import (
     sha256_file,
     write_chunk,
 )
-from train_offline_grp_transformer import load_file_list
+from train_mortal_offline_with_grp_transformer import load_file_list
 
 
 # 连续 observation 会以 float16 保存。该阈值用于阻止量化误差超过当前训练可接受范围
@@ -215,16 +216,17 @@ def build_contract(files, selection_seed, files_per_chunk, compression_level):
         # 记录实际导入的扩展文件，而非只记录 Rust 源码；这样重新编译出的不同二进制也会
         # 使契约变化。Python 文件均使用绝对定位，避免当前工作目录影响摘要对象。
         'implementation': {
-            name: sha256_file(filename)
+            legacy_name: record['sha256']
             for name, filename in {
                 'precompute_grp_transformer_cache.py': Path(__file__).resolve(),
                 'precomputed_cache.py': pipeline_dir / 'precomputed_cache.py',
-                'dataloader_grp_transformer.py': pipeline_dir / 'dataloader_grp_transformer.py',
+                'dataloader_with_grp_transformer.py': pipeline_dir / 'dataloader_with_grp_transformer.py',
                 'dataloader.py': MORTAL_DIR / 'dataloader.py',
                 'model.py': MORTAL_DIR / 'model.py',
                 'reward_calculator.py': MORTAL_DIR / 'reward_calculator.py',
                 'libriichi_extension': Path(sys.modules['libriichi'].__file__).resolve(),
             }.items()
+            for legacy_name, record in [source_identity(filename, name)]
         },
     }
     return contract, sha256_json(contract), records

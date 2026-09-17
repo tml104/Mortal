@@ -10,7 +10,7 @@ GRP 输入是一场牌谱在每局开始时记录的 7 维特征序列：
 按局计算，不处理 observation、动作 mask 或折扣步数。
 
 普通 ``dataloader.py`` 会通过 ``calc_delta_pt`` 分别计算玩家奖励；优化后的
-``transformer_pipeline/dataloader_grp_transformer.py`` 则调用 ``calc_grp`` 一次取得
+``transformer_pipeline/dataloader_with_grp_transformer.py`` 则调用 ``calc_grp`` 一次取得
 四家全部概率，避免同一牌谱重复执行四次 Transformer。
 """
 

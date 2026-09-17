@@ -10,7 +10,7 @@ Rust ``GameplayLoader`` 负责解压并解析 mjai 日志、推进四家状态�
 4. 识别并隔离确定损坏的牌谱，过滤 action 与 mask 不一致的样本。
 
 普通样本契约为 ``obs, action, mask, steps_to_done, kyoku_reward, player_rank``；启用
-Oracle 时在 ``obs`` 后插入 ``invisible_obs``。``train_offline_grp_transformer.py``
+Oracle 时在 ``obs`` 后插入 ``invisible_obs``。``train_mortal_offline_with_grp_transformer.py``
 通过 ``populate_buffer`` 使用完整的数据加载流程；预计算入口会复用 GRP 初始化和
 ``iter_file_samples``，但会绕过本模块的自动隔离移动逻辑。
 """
@@ -507,7 +507,7 @@ class FileDatasetsIter(BaseFileDatasetsIter):
                 self.buffer.append(entry)
 
 
-# 明确限制 ``from dataloader_grp_transformer import *`` 的公共表面；worker_init_fn
+# 明确限制 ``from dataloader_with_grp_transformer import *`` 的公共表面；worker_init_fn
 # 直接复用基类实现，其余以下名称是离线训练器进行数据清单和隔离管理所需的 API。
 __all__ = [
     'FileDatasetsIter',

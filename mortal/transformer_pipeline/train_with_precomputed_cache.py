@@ -19,9 +19,10 @@ from _bootstrap import (
     POST_PIPELINE_CACHE_TRAINER_SHA256,
     PRE_PIPELINE_CACHE_TRAINER_SHA256,
 )
+from _rename_compat import source_identity
 from config import config
 from precomputed_cache import PackedCacheBatchIterator
-from train_offline_grp_transformer import (
+from train_mortal_offline_with_grp_transformer import (
     METRIC_NAMES,
     atomic_torch_save,
     build_models_and_optimizer,
@@ -113,7 +114,7 @@ def build_run_contract(args, manifest_file, manifest, initial_checkpoint):
         'batch_size': args.batch_size,
         'shuffle_seed': args.shuffle_seed,
         'device': str(args.device),
-        'trainer_sha256': sha256_file(Path(__file__).resolve()),
+        'trainer_sha256': source_identity(__file__)[1]['sha256'],
     }
     return contract, sha256_json(contract)
 
@@ -200,7 +201,7 @@ def checkpoint_payload(
         'run_contract_sha256': run_contract_sha256,
         'epoch_progress': progress,
         'timestamp': datetime.now().timestamp(),
-        'trainer': 'train_precomputed_cache.py',
+        'trainer': 'train_with_precomputed_cache.py',
         'config': config,
     }
 

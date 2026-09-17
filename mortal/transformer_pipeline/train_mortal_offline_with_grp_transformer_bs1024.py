@@ -26,7 +26,8 @@ os.environ['RAYON_NUM_THREADS'] = str(RAYON_NUM_THREADS)
 import numpy as np
 import torch
 
-import train_offline_grp_transformer as trainer
+import train_mortal_offline_with_grp_transformer as trainer
+from _rename_compat import source_identity
 
 
 def validate_launcher_config():
@@ -54,10 +55,8 @@ def install_reproducibility_contract():
 
     def build_implementation_manifest():
         manifest = original()
-        manifest['files'][Path(__file__).name] = {
-            'path': str(Path(__file__).resolve()),
-            'sha256': trainer.sha256_file(__file__),
-        }
+        name, record = source_identity(__file__)
+        manifest['files'][name] = record
         manifest['runtime']['model_init_seed'] = MODEL_INIT_SEED
         manifest['runtime']['rayon_num_threads'] = RAYON_NUM_THREADS
         return manifest
