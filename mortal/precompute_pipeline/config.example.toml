@@ -1,0 +1,65 @@
+[quarantine]
+train_dir = "./data/grp/train"
+val_dir = "./data/grp/val"
+quarantine_dir = "./data/grp/quarantine"
+report_file = "./data/grp/quarantine/report.jsonl"
+progress_file = "./data/grp/quarantine/progress.json"
+commit_every = 100
+worker_processes = 8
+rayon_threads_per_worker = 2
+max_in_flight = 16
+
+[precompute]
+train_dir = "./data/grp/train"
+val_dir = "./data/grp/val"
+logical_root = "./data/precomputed_chunks"
+progress_file = "./data/precomputed_chunks/progress.json"
+c_root = "/mnt/c/MortalChunks"
+d_root = "/mnt/d/MortalChunks"
+c_budget_gib = 320
+d_budget_gib = 440
+chunk_size = 16384
+file_batch_size = 4
+compression_level = 1
+rayon_threads = 4
+torch_threads = 4
+
+[reward]
+state_file = "./artifacts/grp_transformer.pth"
+d_model = 128
+nhead = 4
+num_layers = 4
+max_seq_len = 60
+pts = [6.0, 4.0, 2.0, 0.0]
+
+[training]
+dataset_progress = "./data/precomputed_chunks/progress.json"
+output_dir = "./artifacts/mortal_precomputed_v2"
+device = "cuda:0"
+batch_size = 1024
+num_epochs = 1
+enable_amp = true
+enable_compile = false
+compile_dynamic = true
+enable_cudnn_benchmark = true
+prefetch = true
+log_every_batches = 100
+save_every_batches = 1000
+validation_samples = 131072
+validation_seed = 0
+
+[model]
+conv_channels = 192
+num_blocks = 40
+freeze_bn = false
+
+[loss]
+gamma = 1.0
+cql_weight = 5.0
+rank_weight = 0.2
+
+[optimizer]
+learning_rate = 1e-4
+betas = [0.9, 0.999]
+eps = 1e-8
+weight_decay = 0.1
