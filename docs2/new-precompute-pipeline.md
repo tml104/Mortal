@@ -46,6 +46,41 @@ python mortal/precompute_pipeline/train/train.py --config "$PWD/mortal/precomput
 
 训练入口从完整数据集随机初始化 Brain、DQN 和 AuxNet，默认在 `cuda:0` 使用 batch 1024 和 AMP。训练先打乱 chunk，再独立打乱每块内部样本；CPU 最多预取一块，完整 observation 只按 batch 在目标设备展开。周期验证使用固定 val 子集，每轮结束验证全部 val。
 
+## 预计算进度与提速
+
+Q39–Q44 的[进度与编码优化](../.scratch/precompute-progress-performance/spec.md)已经实现。预计算现在持续在启动命令的终端输出日志；以下配置已在示例及本链路实际配置中生效：
+
+| 配置 | 默认值 | 含义 |
+| --- | ---: | --- |
+| `rayon_threads` | 16 | Rust/libriichi 的共用 Rayon 线程池 |
+| `torch_threads` | 1 | CPU GRP 算子内部线程数 |
+| `file_batch_size` | 4 | 每次交给 Rust 的牌谱数 |
+| `log_every_chunks` | 1 | 每成功提交多少个 chunk 输出一次周期进度，必须为正整数 |
+
+默认每成功提交一个 chunk 输出一次进度；启动/恢复、目录扫描开始、train/val 切换和完成也输出，并立即刷新。日志包括完整提交牌谱数/总数与百分比、累计已提交 chunks/样本、本次耗时、牌谱/样本速度、当前 split 的预计剩余时间、C/D 用量与预算、游标和样本 offset。buffer 中的样本不算已提交；恢复保留旧累计成果，但速度只统计本次增量。
+
+五段累计耗时为 Rust/libriichi 提取、GRP 奖励推理、Python 样本整理、编码压缩、写盘与进度提交。日志在处理边界产生，阻塞的单次调用中没有定时心跳。统计只在终端展示，不加入恢复 JSON，只有 chunk 与进度均成功提交后才能报告新增成果。
+
+编码已减少整行标量通道和 reshape 的冗余复制，采用连续布局，并尽早把二值数组转成 uint8。完整观测语义检查仍在筛选阶段执行；编码不再重复逐值检查观测，保留形状、dtype、标签/mask、有限奖励等必要检查。使用前提仍是牌谱已筛选且输入及生成语义稳定。
+
+已有 chunk 格式、float32 观测、float64 奖励和恢复进度保持兼容，继续执行原预计算命令即可从旧断点恢复，无需清空已有 chunks 或重新复制配置。实验方法和限制见[性能报告](../.scratch/new-precompute-pipeline/precompute-performance.md)。
+
+日志字段的口径如下：
+
+| 字段 | 含义 |
+| --- | --- |
+| `event` | start / resume / scanning / chunk_committed / split_complete / complete / already_complete |
+| `split`、`chunks`、`samples` | 当前显示的 split 及该 split 累计已提交块/样本数 |
+| `files`、`percent` | 当前 split 完整提交牌谱数/总数及百分比；扫描前尚未知总数时不展示 |
+| `elapsed_s` | 本次启动以来的秒数，包含初始化与扫描时间 |
+| `run_files_s`、`run_samples_s` | 本次运行整体新增的完整牌谱/提交样本平均速度，单位为每秒 |
+| `eta_s` | 用本次文件速度估算当前 split 剩余秒数；尚无依据时为 unknown，完成时为 0 |
+| `c_gib`、`d_gib` | 全数据集在各盘累计已提交 GiB / 配置预算 |
+| `cursor`、`offset` | 已提交的源文件位置；split 已结束或尾块已到 EOF 时显示 <end> |
+| `rust_s`、`grp_s`、`python_s`、`encode_s`、`commit_s` | 五段本次累计秒数；Python 整理排除 Rust/GRP，并包含 buffer 复制 |
+
+恢复起始日志先显示已有 chunk、样本和游标；扫描和正常重读游标牌谱后，后续提交日志才显示准确的完整文件数。五段计时是本次实际执行开销，生成批次中尚未提交的数据也可能已有计算耗时；它们不是单个 chunk 的独占耗时，也不包含全部初始化与文件扫描开销。
+
 ## 自动恢复
 
 三个入口都以各自的持久化状态恢复，不需要额外 `--resume`：
@@ -71,10 +106,16 @@ python mortal/precompute_pipeline/quarantine_logs/quarantine_logs.py --config "$
 
 ## 可调线程与资源
 
-筛选入口使用 `worker_processes`、`rayon_threads_per_worker` 和 `max_in_flight`。预计算入口另有 `rayon_threads` 和 `torch_threads`，分别控制 Rust 数据提取和 PyTorch CPU 奖励计算，默认都是 4；两组参数互不替代。
+筛选入口使用 `worker_processes`、`rayon_threads_per_worker` 和 `max_in_flight`。预计算入口另有 `rayon_threads` 和 `torch_threads`：前者控制 Rust 在文件间与玩家视角间共用的 Rayon 池，后者控制 CPU GRP 算子的内部并行。当前默认及实际配置为 16/1；文件批次为 4。两组入口的参数互不替代，也不会自动加速 NumPy 编码或当前单线程 Zstd。
 
 当前机器对同一批 2,000 份真实牌谱进行只读校验时，单 worker × 2 Rayon 为 2.37 份/秒，8 workers × 2 Rayon 为 9.65 份/秒，提升约 4.07 倍；两者逐份判定完全一致。8×2 的 CPU 利用率约 85.1%，worker RSS 合计峰值约 2.33 GiB，WSL 最低可用内存约 9.31 GiB，未使用 swap。测试中的 2,000 份均判定可用，且测试没有移动牌谱、写报告或更新真实进度。
 
 筛选 worker 不加载 PyTorch，因此当前机器可先按 3–4 GiB 主机内存预算运行默认 8×2；预计算仍按约 6–8 GiB 主机内存预算，训练按约 3–4 GiB 主机内存及 6–8 GiB 显存预算。以上是当前样本上的实测或规划值，不是硬上界；其他硬件可降低 worker 数控制内存，再根据终端吞吐调整。
 
+前期固定 128 份牌谱的 D 盘实验约为 1,556 → 2,890 样本/秒；正式版本的独立复测结果见[验收记录](../.scratch/precompute-progress-performance/acceptance.md)。样本分布和系统负载会影响吞吐与峰值，生成仍保留 6–8 GiB 的规划预算。
+
 完整全量筛选、约 629 GiB 缓存生成和正式训练均是长时间、高资源流程，不属于普通冒烟测试。先运行仓库提供的小型测试和有限真实数据验证，再另行启动全量任务。
+
+## 独立优化训练与新模型消费
+
+已有 chunks 可以交给新的原生 Conv2d 优化链路，采用 channels_last、batch 2048、静态编译/CUDA Graph，并提供终端训练日志、新模型 mjai 推理及独立一对三评测。旧训练 checkpoint 需显式迁移到新目录；操作、配置、兼容边界和当前硬件测量见[优化主策略使用说明](optimized-main-model.md)。

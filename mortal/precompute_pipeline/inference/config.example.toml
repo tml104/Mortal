@@ -1,0 +1,9 @@
+[inference]
+checkpoint = "./artifacts/mortal_precomputed_optimize/latest.pth"
+device = "cpu"
+enable_amp = false
+enable_quick_eval = true
+enable_rule_based_agari_guard = true
+name = "MortalConv2d"
+# torch_threads = 8
+# rayon_threads = 16

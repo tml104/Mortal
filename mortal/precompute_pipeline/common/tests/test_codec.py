@@ -1,3 +1,4 @@
+import hashlib
 import os
 import subprocess
 import sys
@@ -5,6 +6,7 @@ import unittest
 from pathlib import Path
 
 import numpy as np
+import zstandard as zstd
 
 
 MORTAL_DIR = Path(__file__).resolve().parents[3]
@@ -105,6 +107,32 @@ class ChunkCodecTests(unittest.TestCase):
         np.testing.assert_array_equal(actual.steps_to_done, expected.steps_to_done)
         np.testing.assert_array_equal(actual.rewards, expected.rewards)
         np.testing.assert_array_equal(actual.ranks, expected.ranks)
+
+
+    def test_encoding_preserves_pre_optimization_payload(self):
+        # 来自实现前 codec 的三条固定样本参考；与压缩器版本无关。
+        payload = zstd.ZstdDecompressor().decompress(encode_chunk(sample_batch(3)))
+        self.assertEqual(
+            hashlib.sha256(payload).hexdigest(),
+            '471cc9b25489b4f17733360e5a51759b2a1a7a15290bbbe061e3f8fbf41cefc5',
+        )
+
+    def test_keeps_required_structure_label_and_reward_checks(self):
+        mutations = {
+            'obs dtype': lambda batch: setattr(batch, 'obs', batch.obs.astype(np.float64)),
+            'obs shape': lambda batch: setattr(batch, 'obs', batch.obs[:, :, :33]),
+            'reward': lambda batch: batch.rewards.__setitem__(0, np.inf),
+            'action': lambda batch: batch.actions.__setitem__(0, 46),
+            'steps': lambda batch: batch.steps_to_done.__setitem__(0, -1),
+            'rank': lambda batch: batch.ranks.__setitem__(0, 4),
+            'length': lambda batch: setattr(batch, 'ranks', batch.ranks[:1]),
+        }
+        for name, mutate in mutations.items():
+            with self.subTest(field=name):
+                batch = sample_batch()
+                mutate(batch)
+                with self.assertRaises(ValueError):
+                    encode_chunk(batch)
 
     def test_rejects_action_not_allowed_by_mask(self):
         batch = sample_batch()

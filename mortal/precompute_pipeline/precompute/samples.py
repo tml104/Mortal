@@ -8,6 +8,7 @@ import torch
 from libriichi.dataset import GameplayLoader
 from model import GRP_Transformer
 from precompute_pipeline.common.codec import ACTION_SPACE, OBS_PLANES, OBS_TILES, SampleBatch
+from precompute_pipeline.precompute.progress import StageTimings
 
 
 def _stable_ranks(scores):
@@ -83,6 +84,7 @@ class SampleGenerator:
         max_seq_len,
         pts,
     ):
+        self.timings = StageTimings()
         self.max_seq_len = int(max_seq_len)
         self.pts = np.asarray(pts, dtype=np.float64)
         if self.pts.shape != (4,) or not np.isfinite(self.pts).all():
@@ -125,7 +127,8 @@ class SampleGenerator:
     def load_files(self, filenames):
         """由 Rust 并行读取一批文件，再按输入顺序逐份计算奖励。"""
         filenames = [str(Path(filename)) for filename in filenames]
-        loaded = self.loader.load_gz_log_files(filenames)
+        with self.timings.measure('rust'):
+            loaded = self.loader.load_gz_log_files(filenames)
         if len(loaded) != len(filenames):
             raise RuntimeError(
                 f'GameplayLoader 返回文件数错误: expected={len(filenames)}, actual={len(loaded)}'
@@ -163,7 +166,8 @@ class SampleGenerator:
                 shared_feature = feature.copy()
                 shared_ranks = final_ranks.copy()
                 shared_scores = final_scores.copy()
-                rank_matrix = self._predict_rank_matrix(shared_feature)
+                with self.timings.measure('grp'):
+                    rank_matrix = self._predict_rank_matrix(shared_feature)
                 rewards_by_player, ranks_by_player = build_shared_targets(
                     shared_feature,
                     rank_by_player=shared_ranks,

@@ -1,0 +1,3 @@
+/home/tml104/miniconda3/envs/mortal/lib/python3.12/site-packages/torch/profiler/profiler.py:224: UserWarning: Warning: Profiler clears events at the end of each cycle.Only events from the current cycle will be reported.To keep events across cycles, set acc_events=True.
+  _warn_once(
+{"status": "ok", "name": "reader-1024", "batch": 1024, "source": "reader", "sync_metrics": true, "check_mask": true, "compile": "none", "fused": false, "precision": "fp16", "torch_threads": 8, "warmup_seconds": 3.014806981998845, "steps": 60, "seconds": 5.612450334010646, "samples_per_second": 10947.090191191963, "ms_per_batch": 93.54083890017743, "peak_allocated_gib": 4.015073776245117, "peak_reserved_gib": 4.25390625, "metrics_finite": true}

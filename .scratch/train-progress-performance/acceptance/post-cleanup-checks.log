@@ -1,0 +1,33 @@
+usage: migrate.py [-h] --config CONFIG --source-checkpoint SOURCE_CHECKPOINT
+
+显式迁移旧预计算模型为原生 Conv2d
+
+options:
+  -h, --help            show this help message and exit
+  --config CONFIG
+  --source-checkpoint SOURCE_CHECKPOINT
+usage: train.py [-h] --config CONFIG
+
+训练原生 Conv2d 优化主模型
+
+options:
+  -h, --help       show this help message and exit
+  --config CONFIG
+usage: inference.py [-h] --config CONFIG {0,1,2,3}
+
+使用原生 Conv2d 模型进行普通 mjai 推理
+
+positional arguments:
+  {0,1,2,3}
+
+options:
+  -h, --help       show this help message and exit
+  --config CONFIG
+usage: evaluate.py [-h] --config CONFIG
+
+新 Conv2d 模型的独立一对三评测
+
+options:
+  -h, --help       show this help message and exit
+  --config CONFIG
+PASS syntax, all 3 independent example configurations and all 4 entrypoint help commands after cleanup

@@ -1,0 +1,594 @@
+[
+  {
+    "path": "bench.py",
+    "bytes": 12083
+  },
+  {
+    "path": "bf16-resident.json",
+    "bytes": 490
+  },
+  {
+    "path": "bf16-resident.log",
+    "bytes": 452
+  },
+  {
+    "path": "combined-2048.json",
+    "bytes": 548
+  },
+  {
+    "path": "combined-2048.log",
+    "bytes": 506
+  },
+  {
+    "path": "compile-dynamic-reader.json",
+    "bytes": 634
+  },
+  {
+    "path": "compile-dynamic-reader.log",
+    "bytes": 588
+  },
+  {
+    "path": "compile-dynamic-resident.json",
+    "bytes": 562
+  },
+  {
+    "path": "compile-dynamic-resident.log",
+    "bytes": 520
+  },
+  {
+    "path": "compile-dynamic-validation.json",
+    "bytes": 1490
+  },
+  {
+    "path": "compile-dynamic-validation.log",
+    "bytes": 1304
+  },
+  {
+    "path": "compile-reduce-reader-2048.json",
+    "bytes": 642
+  },
+  {
+    "path": "compile-reduce-reader-2048.log",
+    "bytes": 596
+  },
+  {
+    "path": "compile-reduce-reader.json",
+    "bytes": 636
+  },
+  {
+    "path": "compile-reduce-reader.log",
+    "bytes": 590
+  },
+  {
+    "path": "compile-reduce-resident.json",
+    "bytes": 563
+  },
+  {
+    "path": "compile-reduce-resident.log",
+    "bytes": 521
+  },
+  {
+    "path": "compile-reduce-validation.json",
+    "bytes": 1489
+  },
+  {
+    "path": "compile-reduce-validation.log",
+    "bytes": 1303
+  },
+  {
+    "path": "compile-static-reader-2048.json",
+    "bytes": 561
+  },
+  {
+    "path": "compile-static-reader-2048.log",
+    "bytes": 519
+  },
+  {
+    "path": "compile-static-reader.json",
+    "bytes": 554
+  },
+  {
+    "path": "compile-static-reader.log",
+    "bytes": 512
+  },
+  {
+    "path": "compile-static-resident.json",
+    "bytes": 503
+  },
+  {
+    "path": "compile-static-resident.log",
+    "bytes": 465
+  },
+  {
+    "path": "deferred-metrics.json",
+    "bytes": 492
+  },
+  {
+    "path": "deferred-metrics.log",
+    "bytes": 454
+  },
+  {
+    "path": "finish",
+    "bytes": 48
+  },
+  {
+    "path": "fused-reader-repeat.json",
+    "bytes": 632
+  },
+  {
+    "path": "fused-reader-repeat.log",
+    "bytes": 586
+  },
+  {
+    "path": "fused-reader.json",
+    "bytes": 489
+  },
+  {
+    "path": "fused-reader.log",
+    "bytes": 451
+  },
+  {
+    "path": "gpu-packed-reader.json",
+    "bytes": 709
+  },
+  {
+    "path": "gpu-packed-reader.log",
+    "bytes": 657
+  },
+  {
+    "path": "gpu-packed-reduce-reader-2048.json",
+    "bytes": 723
+  },
+  {
+    "path": "gpu-packed-reduce-reader-2048.log",
+    "bytes": 671
+  },
+  {
+    "path": "gpu-packed-reduce-reader.json",
+    "bytes": 714
+  },
+  {
+    "path": "gpu-packed-reduce-reader.log",
+    "bytes": 662
+  },
+  {
+    "path": "gpu_reader.py",
+    "bytes": 2877
+  },
+  {
+    "path": "guard.log",
+    "bytes": 27355
+  },
+  {
+    "path": "guard.pid",
+    "bytes": 7
+  },
+  {
+    "path": "guard.py",
+    "bytes": 5270
+  },
+  {
+    "path": "jobs/01.json",
+    "bytes": 35
+  },
+  {
+    "path": "jobs/02.json",
+    "bytes": 64
+  },
+  {
+    "path": "jobs/03.json",
+    "bytes": 77
+  },
+  {
+    "path": "jobs/04.json",
+    "bytes": 93
+  },
+  {
+    "path": "jobs/05.json",
+    "bytes": 51
+  },
+  {
+    "path": "jobs/06.json",
+    "bytes": 51
+  },
+  {
+    "path": "jobs/07.json",
+    "bytes": 51
+  },
+  {
+    "path": "jobs/08.json",
+    "bytes": 51
+  },
+  {
+    "path": "jobs/09.json",
+    "bytes": 63
+  },
+  {
+    "path": "jobs/10.json",
+    "bytes": 55
+  },
+  {
+    "path": "jobs/11.json",
+    "bytes": 73
+  },
+  {
+    "path": "jobs/12.json",
+    "bytes": 73
+  },
+  {
+    "path": "jobs/13.json",
+    "bytes": 79
+  },
+  {
+    "path": "jobs/14.json",
+    "bytes": 81
+  },
+  {
+    "path": "jobs/15.json",
+    "bytes": 104
+  },
+  {
+    "path": "jobs/16.json",
+    "bytes": 110
+  },
+  {
+    "path": "jobs/17.json",
+    "bytes": 109
+  },
+  {
+    "path": "jobs/18.json",
+    "bytes": 162
+  },
+  {
+    "path": "jobs/19.json",
+    "bytes": 85
+  },
+  {
+    "path": "jobs/20.json",
+    "bytes": 109
+  },
+  {
+    "path": "jobs/21.json",
+    "bytes": 109
+  },
+  {
+    "path": "jobs/22.json",
+    "bytes": 123
+  },
+  {
+    "path": "jobs/23.json",
+    "bytes": 147
+  },
+  {
+    "path": "jobs/24.json",
+    "bytes": 101
+  },
+  {
+    "path": "jobs/25.json",
+    "bytes": 109
+  },
+  {
+    "path": "jobs/26.json",
+    "bytes": 140
+  },
+  {
+    "path": "jobs/27.json",
+    "bytes": 140
+  },
+  {
+    "path": "jobs/28.json",
+    "bytes": 159
+  },
+  {
+    "path": "jobs/29.json",
+    "bytes": 128
+  },
+  {
+    "path": "jobs/30.json",
+    "bytes": 159
+  },
+  {
+    "path": "jobs/31.json",
+    "bytes": 125
+  },
+  {
+    "path": "jobs/32.json",
+    "bytes": 98
+  },
+  {
+    "path": "jobs/33.json",
+    "bytes": 123
+  },
+  {
+    "path": "jobs/34.json",
+    "bytes": 147
+  },
+  {
+    "path": "jobs/35.json",
+    "bytes": 158
+  },
+  {
+    "path": "jobs/36.json",
+    "bytes": 149
+  },
+  {
+    "path": "jobs/37.json",
+    "bytes": 147
+  },
+  {
+    "path": "jobs/38.json",
+    "bytes": 112
+  },
+  {
+    "path": "jobs/39.json",
+    "bytes": 142
+  },
+  {
+    "path": "jobs/40.json",
+    "bytes": 166
+  },
+  {
+    "path": "jobs/41.json",
+    "bytes": 182
+  },
+  {
+    "path": "jobs/42.json",
+    "bytes": 169
+  },
+  {
+    "path": "layout-compile-reader-1024.json",
+    "bytes": 658
+  },
+  {
+    "path": "layout-compile-reader-1024.log",
+    "bytes": 612
+  },
+  {
+    "path": "layout-compile-reader-2048.json",
+    "bytes": 660
+  },
+  {
+    "path": "layout-compile-reader-2048.log",
+    "bytes": 614
+  },
+  {
+    "path": "layout-compile-reader-4096.json",
+    "bytes": 660
+  },
+  {
+    "path": "layout-compile-reader-4096.log",
+    "bytes": 614
+  },
+  {
+    "path": "layout-reader-1024-profile.txt",
+    "bytes": 9766
+  },
+  {
+    "path": "layout-reader-1024-trace.json",
+    "bytes": 30607662
+  },
+  {
+    "path": "layout-reader-1024.json",
+    "bytes": 566
+  },
+  {
+    "path": "layout-reader-1024.log",
+    "bytes": 808
+  },
+  {
+    "path": "layout-reader-2048.json",
+    "bytes": 565
+  },
+  {
+    "path": "layout-reader-2048.log",
+    "bytes": 523
+  },
+  {
+    "path": "layout-reader-4096.json",
+    "bytes": 650
+  },
+  {
+    "path": "layout-reader-4096.log",
+    "bytes": 604
+  },
+  {
+    "path": "layout-reduce-reader-2048.json",
+    "bytes": 657
+  },
+  {
+    "path": "layout-reduce-reader-2048.log",
+    "bytes": 611
+  },
+  {
+    "path": "layout.py",
+    "bytes": 3162
+  },
+  {
+    "path": "live-baseline.json",
+    "bytes": 1818
+  },
+  {
+    "path": "no-device-sync.json",
+    "bytes": 491
+  },
+  {
+    "path": "no-device-sync.log",
+    "bytes": 453
+  },
+  {
+    "path": "no-sync-reader-repeat.json",
+    "bytes": 633
+  },
+  {
+    "path": "no-sync-reader-repeat.log",
+    "bytes": 587
+  },
+  {
+    "path": "paused-checkpoint.json",
+    "bytes": 131
+  },
+  {
+    "path": "reader-1024-profile.txt",
+    "bytes": 9766
+  },
+  {
+    "path": "reader-1024-trace.json",
+    "bytes": 33601371
+  },
+  {
+    "path": "reader-1024.json",
+    "bytes": 486
+  },
+  {
+    "path": "reader-1024.log",
+    "bytes": 732
+  },
+  {
+    "path": "reader-1536.json",
+    "bytes": 544
+  },
+  {
+    "path": "reader-1536.log",
+    "bytes": 502
+  },
+  {
+    "path": "reader-2048.json",
+    "bytes": 547
+  },
+  {
+    "path": "reader-2048.log",
+    "bytes": 505
+  },
+  {
+    "path": "reader-2560.json",
+    "bytes": 541
+  },
+  {
+    "path": "reader-2560.log",
+    "bytes": 499
+  },
+  {
+    "path": "reader-baseline-repeat.json",
+    "bytes": 635
+  },
+  {
+    "path": "reader-baseline-repeat.log",
+    "bytes": 589
+  },
+  {
+    "path": "reader-final-repeat.json",
+    "bytes": 632
+  },
+  {
+    "path": "reader-final-repeat.log",
+    "bytes": 586
+  },
+  {
+    "path": "reduce-marked-eval-timing.json",
+    "bytes": 56
+  },
+  {
+    "path": "reduce-marked-eval.json",
+    "bytes": 1836
+  },
+  {
+    "path": "reduce-marked-eval.log",
+    "bytes": 1749
+  },
+  {
+    "path": "reduce-unmarked-eval-timing.json",
+    "bytes": 56
+  },
+  {
+    "path": "reduce-unmarked-eval.json",
+    "bytes": 1841
+  },
+  {
+    "path": "reduce-unmarked-eval.log",
+    "bytes": 1754
+  },
+  {
+    "path": "report.md",
+    "bytes": 13094
+  },
+  {
+    "path": "resident-1024.json",
+    "bytes": 491
+  },
+  {
+    "path": "resident-1024.log",
+    "bytes": 453
+  },
+  {
+    "path": "resident-2048.json",
+    "bytes": 493
+  },
+  {
+    "path": "resident-2048.log",
+    "bytes": 455
+  },
+  {
+    "path": "resident-3072.json",
+    "bytes": 491
+  },
+  {
+    "path": "resident-3072.log",
+    "bytes": 453
+  },
+  {
+    "path": "resident-4096.json",
+    "bytes": 491
+  },
+  {
+    "path": "resident-4096.log",
+    "bytes": 453
+  },
+  {
+    "path": "resident-6144.json",
+    "bytes": 348
+  },
+  {
+    "path": "resident-6144.log",
+    "bytes": 0
+  },
+  {
+    "path": "results.csv",
+    "bytes": 7336
+  },
+  {
+    "path": "results.json",
+    "bytes": 30501
+  },
+  {
+    "path": "resume-check.json",
+    "bytes": 442
+  },
+  {
+    "path": "resumed-train.log",
+    "bytes": 0
+  },
+  {
+    "path": "resumed-train.pid",
+    "bytes": 7
+  },
+  {
+    "path": "status.json",
+    "bytes": 123
+  },
+  {
+    "path": "threads-1-reader.json",
+    "bytes": 492
+  },
+  {
+    "path": "threads-1-reader.log",
+    "bytes": 454
+  },
+  {
+    "path": "threads-4-reader.json",
+    "bytes": 491
+  },
+  {
+    "path": "threads-4-reader.log",
+    "bytes": 453
+  }
+]

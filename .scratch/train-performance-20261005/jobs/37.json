@@ -1,0 +1,1 @@
+{"name": "compile-reduce-validation", "args": ["--compile", "reduce", "--source", "reader", "--steps", "180", "--validate-cycle"], "timeout": 420}

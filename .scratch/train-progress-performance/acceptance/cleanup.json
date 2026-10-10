@@ -1,0 +1,17 @@
+{
+  "removed_task_owned_temporary_items": [
+    "/tmp/mortal-optimize-acceptance/benchmark.py",
+    "/tmp/mortal-optimize-acceptance/source.pth",
+    "/tmp/mortal-optimize-acceptance/artifacts/baseline",
+    "/tmp/mortal-optimize-acceptance/artifacts/optimized",
+    "/tmp/mortal-optimize-acceptance/artifacts/optimized-warm"
+  ],
+  "retained": [
+    "formal migration tool",
+    "public behavior tests",
+    "manual real integration test",
+    "acceptance JSON and logs",
+    "historical experiments from earlier tasks"
+  ],
+  "production_data_removed": false
+}

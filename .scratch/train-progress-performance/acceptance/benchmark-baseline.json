@@ -1,0 +1,23 @@
+{
+  "kind": "baseline",
+  "source_batch": 2837000,
+  "source_samples": 2905085576,
+  "batch_size": 1024,
+  "new_batches": 360,
+  "new_samples": 368640,
+  "elapsed_s": 45.66562519100262,
+  "overall_samples_s": 8072.592862971078,
+  "first_batch_s": 3.1139186559994414,
+  "stable_samples": 266240,
+  "stable_elapsed_s": 25.192216661998827,
+  "stable_samples_s": 10568.343531341941,
+  "rss_peak_bytes": 3074465792,
+  "cuda_allocated_peak_bytes": 4450597888,
+  "cuda_reserved_peak_bytes": 5085593600,
+  "card_observed_peak_bytes": 6836191232,
+  "completed_batch": 2837360,
+  "completed_samples": 2905454216,
+  "timing_note": "first metric window excluded; explicit validation/save time subtracted from stable segment; all real updates counted",
+  "bn_updates": 360,
+  "optimizer_updates": 360
+}

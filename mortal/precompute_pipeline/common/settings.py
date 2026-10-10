@@ -44,6 +44,7 @@ class PrecomputeSettings:
     rayon_threads: int
     torch_threads: int
     reward: RewardSettings
+    log_every_chunks: int = 1
 
 
 @dataclass(frozen=True)
@@ -235,9 +236,10 @@ def load_settings(filename):
             chunk_size=positive_int('chunk_size', 16_384),
             file_batch_size=positive_int('file_batch_size', 4),
             compression_level=positive_int('compression_level', 1),
-            rayon_threads=positive_int('rayon_threads', 4),
-            torch_threads=positive_int('torch_threads', 4),
+            rayon_threads=positive_int('rayon_threads', 16),
+            torch_threads=positive_int('torch_threads', 1),
             reward=reward,
+            log_every_chunks=positive_int('log_every_chunks', 1),
         )
     training = None
     if 'training' in raw:

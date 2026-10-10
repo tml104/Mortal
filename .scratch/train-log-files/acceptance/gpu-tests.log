@@ -1,0 +1,27 @@
+[261010-00:37:59] /home/tml104/miniconda3/envs/mortal/lib/python3.12/site-packages/torch/jit/_script.py:365: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+[261010-00:37:59]   warnings.warn(
+..[261010-00:38:08] Traceback (most recent call last):
+[261010-00:38:08]   File "/home/tml104/Mortal/mortal/precompute_pipeline/train_optimize/train.py", line 168, in run_training
+[261010-00:38:08]     return _run_training(settings, max_batches=max_batches, started_at=started_at,
+[261010-00:38:08]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[261010-00:38:08]   File "/home/tml104/Mortal/mortal/precompute_pipeline/train_optimize/train.py", line 183, in _run_training
+[261010-00:38:08]     restored = load_checkpoint(latest, contract) if latest.exists() else None
+[261010-00:38:08]                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[261010-00:38:08]   File "/home/tml104/Mortal/mortal/precompute_pipeline/common/optimized_checkpoint.py", line 69, in load_checkpoint
+[261010-00:38:08]     raise RuntimeError('checkpoint 与当前数据或训练语义不兼容')
+[261010-00:38:08] RuntimeError: checkpoint 与当前数据或训练语义不兼容
+[261010-00:38:08] Traceback (most recent call last):
+[261010-00:38:08]   File "/home/tml104/Mortal/mortal/precompute_pipeline/train_optimize/train.py", line 168, in run_training
+[261010-00:38:08]     return _run_training(settings, max_batches=max_batches, started_at=started_at,
+[261010-00:38:08]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[261010-00:38:08]   File "/home/tml104/Mortal/mortal/precompute_pipeline/train_optimize/train.py", line 183, in _run_training
+[261010-00:38:08]     restored = load_checkpoint(latest, contract) if latest.exists() else None
+[261010-00:38:08]                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[261010-00:38:08]   File "/home/tml104/Mortal/mortal/precompute_pipeline/common/optimized_checkpoint.py", line 60, in load_checkpoint
+[261010-00:38:08]     raise RuntimeError(f'checkpoint 缺少字段: {missing}')
+[261010-00:38:08] RuntimeError: checkpoint 缺少字段: ['cuda_rng_state_all']
+.....
+----------------------------------------------------------------------
+Ran 7 tests in 12.070s
+
+OK

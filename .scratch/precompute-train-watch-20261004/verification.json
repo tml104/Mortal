@@ -1,0 +1,22 @@
+{
+  "generation_id": "d43ab623972e4143b380c601908b027a",
+  "chunk_size": 16384,
+  "splits": {
+    "train": {
+      "chunks": 51197,
+      "samples": 838796504,
+      "source_files": 1277544
+    },
+    "val": {
+      "chunks": 6977,
+      "samples": 114305380,
+      "source_files": 173553
+    }
+  },
+  "volume_bytes": {
+    "c": 182143324309,
+    "d": 472439874783
+  },
+  "extra_files": {},
+  "content_checked": false
+}

@@ -1,4 +1,5 @@
 import sys
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -64,6 +65,45 @@ class SettingsAndFilesTests(unittest.TestCase):
                     config_file.write_text(base + invalid, encoding='utf-8')
                     with self.assertRaises(ValueError):
                         load_settings(config_file)
+
+
+    def test_precompute_log_interval_defaults_and_overrides(self):
+        template = (MORTAL_DIR / 'precompute_pipeline/config.example.toml').read_text()
+        template = template.replace('log_every_chunks = 1\n', '')
+        with tempfile.TemporaryDirectory() as temporary:
+            filename = Path(temporary) / 'pipeline.toml'
+            filename.write_text(template)
+            self.assertEqual(load_settings(filename).precompute.log_every_chunks, 1)
+            for raw, expected in (('3', 3), ('0', None), ('-1', None), ('true', None), ('1.5', None)):
+                with self.subTest(value=raw):
+                    filename.write_text(template.replace('[precompute]', f'[precompute]\nlog_every_chunks = {raw}'))
+                    if expected is None:
+                        with self.assertRaisesRegex(ValueError, 'log_every_chunks'):
+                            load_settings(filename)
+                    else:
+                        self.assertEqual(load_settings(filename).precompute.log_every_chunks, expected)
+
+
+    def test_precompute_thread_defaults_and_explicit_overrides(self):
+        template = (MORTAL_DIR / 'precompute_pipeline/config.example.toml').read_text()
+        template = re.sub(r'^(rayon_threads|torch_threads|file_batch_size) = .*\n', '', template, flags=re.M)
+        with tempfile.TemporaryDirectory() as temporary:
+            filename = Path(temporary) / 'pipeline.toml'
+            filename.write_text(template)
+            settings = load_settings(filename).precompute
+            self.assertEqual(
+                (settings.rayon_threads, settings.torch_threads, settings.file_batch_size),
+                (16, 1, 4),
+            )
+            filename.write_text(template.replace(
+                '[precompute]',
+                '[precompute]\nrayon_threads = 2\ntorch_threads = 3\nfile_batch_size = 1',
+            ))
+            settings = load_settings(filename).precompute
+            self.assertEqual(
+                (settings.rayon_threads, settings.torch_threads, settings.file_batch_size),
+                (2, 3, 1),
+            )
 
     def test_orders_dataset_files_by_relative_posix_path(self):
         with tempfile.TemporaryDirectory() as temporary:

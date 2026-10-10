@@ -1,0 +1,67 @@
+{
+  "time": "2026-10-05T01:59:23.988812+08:00",
+  "phase": "resume_confirmed",
+  "old_pid": 257095,
+  "training_pid": 381125,
+  "target_epochs": 30,
+  "restored": {
+    "main_seed": 5817143406848422138,
+    "completed_epochs": 0,
+    "current_epoch": 0,
+    "epoch_samples_consumed": 422912000,
+    "samples_seen": 422912000,
+    "batches_completed": 413000,
+    "last_validation": {
+      "kind": "periodic",
+      "at_batch": 413000,
+      "sample_count": 131072,
+      "loss": 3.155168456956744,
+      "dqn_loss": 0.4120628060773015,
+      "cql_loss": 0.5183910455089062,
+      "rank_loss": 0.7557520838454366,
+      "rank_accuracy": 0.6868743896484375,
+      "q_mean": -0.011117821966763586,
+      "q_target_mean": 0.006503024467747309
+    },
+    "optimizer_present": true,
+    "amp_present": true,
+    "cuda_rng_present": true
+  },
+  "saved": {
+    "main_seed": 5817143406848422138,
+    "completed_epochs": 0,
+    "current_epoch": 0,
+    "epoch_samples_consumed": 423936000,
+    "samples_seen": 423936000,
+    "batches_completed": 414000,
+    "last_validation": {
+      "kind": "periodic",
+      "at_batch": 414000,
+      "sample_count": 131072,
+      "loss": 3.149776281788945,
+      "dqn_loss": 0.39526501623913646,
+      "cql_loss": 0.5205737606156617,
+      "rank_loss": 0.7582123624160886,
+      "rank_accuracy": 0.6846923828125,
+      "q_mean": 0.0034105803060811013,
+      "q_target_mean": 0.006503024467747309
+    },
+    "optimizer_present": true,
+    "amp_present": true,
+    "cuda_rng_present": true
+  },
+  "observed_step": 414100,
+  "metrics": {
+    "train/loss": 3.0831964015960693,
+    "train/dqn_loss": 0.4081319272518158,
+    "train/cql_loss": 0.5043643116950989,
+    "train/rank_loss": 0.7662153244018555,
+    "train/rank_accuracy": 0.6823632717132568,
+    "train/q_mean": 0.01469138078391552,
+    "train/q_target_mean": 0.010778447613120079,
+    "train/learning_rate": 9.999999747378752e-05
+  },
+  "observation_seconds": 120.8,
+  "checkpoint": "/home/tml104/Mortal/artifacts/mortal_precomputed_v2/latest.pth",
+  "train_log": "/home/tml104/Mortal/.scratch/train-epochs30-switch-20261005/train.log"
+}

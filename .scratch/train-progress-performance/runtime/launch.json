@@ -1,0 +1,12 @@
+{
+  "pid": 132144,
+  "log": "/home/tml104/Mortal/.scratch/train-progress-performance/runtime/train.log",
+  "config": "/home/tml104/Mortal/mortal/precompute_pipeline/train_optimize/config.toml",
+  "resumed_batch": 2837000,
+  "status": "running_verified",
+  "verified_checkpoint_batch": 2839000,
+  "verified_samples_seen": 2909181576,
+  "verified_epoch_samples_consumed": 392792064,
+  "completed_periodic_validation_samples": 131072,
+  "tensorboard_created": true
+}

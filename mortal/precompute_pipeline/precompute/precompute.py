@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import sys
+import time
 
 import numpy as np
 import torch
@@ -23,6 +24,7 @@ from precompute_pipeline.common.codec import (
 )
 from precompute_pipeline.common.files import iter_dataset_files
 from precompute_pipeline.common.settings import load_settings
+from precompute_pipeline.precompute.progress import PrecomputeProgress
 from precompute_pipeline.precompute.storage import (
     DatasetStorage,
     initialize_new_dataset,
@@ -88,12 +90,17 @@ def _build_generator(settings):
     )
 
 
-def _generate_split(settings, state, storage, generator, split, root, cursor=None):
+def _generate_split(settings, state, storage, generator, split, root, cursor=None, *, progress):
+    """顺序生成一个 split，日志始终跟在持久化提交之后。"""
+    progress.event('scanning', state, split)
     files = iter_dataset_files(root)
     buffer = SampleBuffer(settings.chunk_size)
     cursor = cursor or {'relative_path': None, 'sample_offset': 0}
     if cursor.get('eof'):
-        storage.finish_split(split, len(files))
+        progress.begin_split(split, len(files), len(files))
+        with progress.timings.measure('commit'):
+            storage.finish_split(split, len(files))
+        progress.finished_split(state, split)
         return
     relative_names = [filename.relative_to(root).as_posix() for filename in files]
     cursor_name = cursor.get('relative_path')
@@ -103,16 +110,20 @@ def _generate_split(settings, state, storage, generator, split, root, cursor=Non
             start_index = relative_names.index(cursor_name)
         except ValueError as exc:
             raise RuntimeError(f'恢复游标对应的源牌谱不存在: {cursor_name}') from exc
+    progress.begin_split(split, len(files), start_index)
     first_offset = int(cursor.get('sample_offset', 0))
     if first_offset < 0:
         raise ValueError('恢复样本 offset 不能为负数')
 
     for batch_start in range(start_index, len(files), settings.file_batch_size):
         selected = files[batch_start:batch_start + settings.file_batch_size]
-        generated = generator.load_files(selected)
+        with progress.timings.generation():
+            generated = generator.load_files(selected)
         if len(generated) != len(selected):
             raise RuntimeError('样本生成器返回的文件数与输入不一致')
-        for filename, samples in zip(selected, generated, strict=True):
+        for file_index, (filename, samples) in enumerate(
+            zip(selected, generated, strict=True), start=batch_start,
+        ):
             relative_name = filename.relative_to(root).as_posix()
             sample_offset = first_offset if relative_name == cursor_name else 0
             if sample_offset > len(samples.actions):
@@ -120,55 +131,76 @@ def _generate_split(settings, state, storage, generator, split, root, cursor=Non
                     f'恢复样本 offset 超出牌谱样本数: '
                     f'{relative_name} {sample_offset}>{len(samples.actions)}'
                 )
+            if relative_name == cursor_name:
+                progress.resolve_resume_file(
+                    split, complete=sample_offset == len(samples.actions),
+                )
             while sample_offset < len(samples.actions):
                 count = min(buffer.remaining, len(samples.actions) - sample_offset)
-                buffer.append(samples, sample_offset, count)
+                with progress.timings.measure('python'):
+                    buffer.append(samples, sample_offset, count)
                 sample_offset += count
                 if buffer.size == buffer.capacity:
-                    encoded = encode_chunk(
-                        buffer.batch(),
-                        compression_level=settings.compression_level,
-                    )
-                    storage.commit_chunk(
-                        split,
-                        encoded,
-                        buffer.size,
-                        {
-                            'relative_path': relative_name,
-                            'sample_offset': sample_offset,
-                        },
-                    )
+                    with progress.timings.measure('encode'):
+                        encoded = encode_chunk(
+                            buffer.batch(),
+                            compression_level=settings.compression_level,
+                        )
+                    with progress.timings.measure('commit'):
+                        storage.commit_chunk(
+                            split,
+                            encoded,
+                            buffer.size,
+                            {
+                                'relative_path': relative_name,
+                                'sample_offset': sample_offset,
+                            },
+                        )
+                    completed_files = file_index + int(sample_offset == len(samples.actions))
+                    progress.committed(state, split, completed_files)
                     buffer.clear()
     if buffer.size:
-        encoded = encode_chunk(
-            buffer.batch(),
-            compression_level=settings.compression_level,
-        )
-        storage.commit_chunk(
-            split,
-            encoded,
-            buffer.size,
-            {'relative_path': None, 'sample_offset': 0, 'eof': True},
-            is_tail=True,
-        )
-    storage.finish_split(split, len(files))
+        with progress.timings.measure('encode'):
+            encoded = encode_chunk(
+                buffer.batch(),
+                compression_level=settings.compression_level,
+            )
+        with progress.timings.measure('commit'):
+            storage.commit_chunk(
+                split,
+                encoded,
+                buffer.size,
+                {'relative_path': None, 'sample_offset': 0, 'eof': True},
+                is_tail=True,
+            )
+        progress.committed(state, split, len(files))
+    with progress.timings.measure('commit'):
+        storage.finish_split(split, len(files))
+    progress.finished_split(state, split)
 
 
-def run_precompute(settings, *, generator=None):
+def run_precompute(settings, *, generator=None, clock=time.monotonic):
     """从头生成或从最后已提交 chunk 恢复 train/val 数据集。"""
+    progress = PrecomputeProgress(settings, clock=clock)
     if settings.progress_file.exists():
         from precompute_pipeline.common.dataset import load_dataset_state
         state = load_dataset_state(settings.progress_file, require_complete=False)
         if state['status'] == 'complete':
+            progress.event('already_complete', state)
             return state
+        progress.event('resume', state)
         prepare_resume(settings, state)
     else:
+        progress.event('start')
         state = initialize_new_dataset(settings)
         from precompute_pipeline.common.files import atomic_write_json
-        atomic_write_json(settings.progress_file, state)
+        with progress.timings.measure('commit'):
+            atomic_write_json(settings.progress_file, state)
     storage = DatasetStorage(settings, state)
     if generator is None:
         generator = _build_generator(settings)
+    # 注入本次计时器，恢复或重复调用时不沿用生成器旧的累计值。
+    generator.timings = progress.timings
     if state['current_split'] == 'train':
         _generate_split(
             settings,
@@ -178,6 +210,7 @@ def run_precompute(settings, *, generator=None):
             'train',
             settings.train_dir,
             cursor=state['source_cursor'],
+            progress=progress,
         )
     if state['status'] != 'complete' and state['current_split'] == 'val':
         _generate_split(
@@ -188,7 +221,9 @@ def run_precompute(settings, *, generator=None):
             'val',
             settings.val_dir,
             cursor=state['source_cursor'],
+            progress=progress,
         )
+    progress.event('complete', state)
     return state
 
 

@@ -1,0 +1,1 @@
+{"name":"compile-static-resident","args":["--compile","static"],"timeout":420}

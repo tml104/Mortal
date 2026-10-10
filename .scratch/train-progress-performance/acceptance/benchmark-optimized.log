@@ -1,0 +1,51 @@
+event=migrated source=/tmp/mortal-optimize-acceptance/source.pth target=/tmp/mortal-optimize-acceptance/artifacts/optimized/latest.pth batches=2837000 samples=2905085576 epoch_sample=388696064 metric_window=cleared next_log=2837050 next_save=2837500
+event=resume epoch=4 target_epochs=30 samples=2905085576 batches=2837000 saved_batch=2837000 elapsed_s=0.14 device=cuda:0 batch_size=2048 execution=conv2d_channels_last_compile_reduce_overhead compile_threads=2 torch_threads=8 epoch_sample=388696064
+event=prepare epoch=4 target_epochs=30 samples=2905085576 batches=2837000 saved_batch=2837000 elapsed_s=0.14 first_compile=pending
+event=prepared epoch=4 target_epochs=30 samples=2905085576 batches=2837000 saved_batch=2837000 elapsed_s=1.22 first_compile=pending
+event=first_batch_start epoch=4 target_epochs=30 samples=2905085576 batches=2837000 saved_batch=2837000 elapsed_s=1.81 actual_batch=2048
+/home/tml104/miniconda3/envs/mortal/lib/python3.12/site-packages/torch/_inductor/lowering.py:7836: UserWarning: 
+Online softmax is disabled on the fly since Inductor decides to
+split the reduction. Cut an issue to PyTorch if this is an
+important use case and you want to speed it up with online
+softmax.
+
+  warnings.warn(
+event=first_batch_end epoch=4 target_epochs=30 samples=2905087624 batches=2837001 saved_batch=2837000 elapsed_s=64.25 actual_batch=2048 first_window_includes_compile=True
+event=train epoch=4 target_epochs=30 samples=2905187976 batches=2837050 saved_batch=2837000 elapsed_s=69.87 epoch_samples=388798464/838796504 percent=46.35 run_samples_s=1465.65 train_samples_s=1497.96 eta_s=300407.8 metric_kind=window loss=2.90781 dqn_loss=0.36769 cql_loss=0.47892 rank_loss=0.727579 rank_accuracy=0.69498 q_mean=0.0130306 q_target_mean=0.0102424
+event=train epoch=4 target_epochs=30 samples=2905290376 batches=2837100 saved_batch=2837000 elapsed_s=75.40 epoch_samples=388900864/838796504 percent=46.36 run_samples_s=2716.10 train_samples_s=18499.12 eta_s=24319.8 metric_kind=window loss=2.91495 dqn_loss=0.374397 cql_loss=0.479464 rank_loss=0.716148 rank_accuracy=0.703076 q_mean=0.00724527 q_target_mean=0.00803951
+event=train epoch=4 target_epochs=30 samples=2905392776 batches=2837150 saved_batch=2837000 elapsed_s=80.74 epoch_samples=389003264/838796504 percent=46.38 run_samples_s=3804.72 train_samples_s=19177.94 eta_s=23453.7 metric_kind=window loss=2.93394 dqn_loss=0.363725 cql_loss=0.485883 rank_loss=0.704007 rank_accuracy=0.709951 q_mean=0.00998083 q_target_mean=0.0104171
+event=validation_start epoch=4 target_epochs=30 samples=2905454216 batches=2837180 saved_batch=2837000 elapsed_s=84.06 kind=periodic validation_total=131072
+/home/tml104/miniconda3/envs/mortal/lib/python3.12/site-packages/torch/_inductor/lowering.py:7836: UserWarning: 
+Online softmax is disabled on the fly since Inductor decides to
+split the reduction. Cut an issue to PyTorch if this is an
+important use case and you want to speed it up with online
+softmax.
+
+  warnings.warn(
+event=validation epoch=4 target_epochs=30 samples=2905454216 batches=2837180 saved_batch=2837000 elapsed_s=104.64 kind=periodic validation_samples=102400/131072 percent=78.12 validation_samples_s=4977.35 eta_s=5.8
+event=validation epoch=4 target_epochs=30 samples=2905454216 batches=2837180 saved_batch=2837000 elapsed_s=105.06 kind=periodic validation_samples=131072/131072 percent=100.00 validation_samples_s=6241.49 eta_s=0.0
+event=validation_end epoch=4 target_epochs=30 samples=2905454216 batches=2837180 saved_batch=2837000 elapsed_s=105.06 kind=periodic metric_kind=validation sample_count=131072 loss=3.0735304169356823 dqn_loss=0.39234982896596193 cql_loss=0.5065528019331396 rank_loss=0.7420828165486455 rank_accuracy=0.69061279296875 q_mean=-0.022138165186333936 q_target_mean=0.006503024240373634
+event=checkpoint epoch=4 target_epochs=30 samples=2905454216 batches=2837180 saved_batch=2837180 elapsed_s=108.14 path=/tmp/mortal-optimize-acceptance/artifacts/optimized/latest.pth
+event=train epoch=4 target_epochs=30 samples=2905454216 batches=2837180 saved_batch=2837180 elapsed_s=108.14 epoch_samples=389064704/838796504 percent=46.38 run_samples_s=3408.89 train_samples_s=18479.20 eta_s=24337.2 metric_kind=window loss=2.87958 dqn_loss=0.37221 cql_loss=0.471987 rank_loss=0.737159 rank_accuracy=0.690039 q_mean=0.00461192 q_target_mean=0.00570591
+event=paused epoch=4 target_epochs=30 samples=2905454216 batches=2837180 saved_batch=2837180 elapsed_s=108.14 reason=bounded_run
+{
+  "kind": "optimized",
+  "source_batch": 2837000,
+  "source_samples": 2905085576,
+  "batch_size": 2048,
+  "new_batches": 180,
+  "new_samples": 368640,
+  "elapsed_s": 108.19805058700149,
+  "overall_samples_s": 3407.0854142014186,
+  "first_batch_s": 62.436001502999716,
+  "stable_samples": 266240,
+  "stable_elapsed_s": 14.165542327998992,
+  "stable_samples_s": 18794.903423765263,
+  "rss_peak_bytes": 3476738048,
+  "cuda_allocated_peak_bytes": 6348544512,
+  "cuda_reserved_peak_bytes": 7883194368,
+  "card_observed_peak_bytes": 9667346432,
+  "completed_batch": 2837180,
+  "completed_samples": 2905454216,
+  "timing_note": "first metric window excluded; explicit validation/save time subtracted from stable segment; all real updates counted"
+}

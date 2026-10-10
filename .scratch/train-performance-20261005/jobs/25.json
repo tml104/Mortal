@@ -1,0 +1,1 @@
+{"name": "fused-reader-repeat", "args": ["--source", "reader", "--fused", "--steps", "180"], "timeout": 420}

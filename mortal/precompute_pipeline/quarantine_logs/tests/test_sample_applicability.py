@@ -96,6 +96,18 @@ class SampleApplicabilityTests(unittest.TestCase):
                 max_seq_len=60,
             )
 
+
+    def test_screening_keeps_full_observation_semantic_checks(self):
+        cases = ((4, 1, 1.0), (0, 0, 0.5), (961, 0, np.nan), (961, 0, np.inf))
+        for plane, tile, value in cases:
+            with self.subTest(plane=plane, value=value):
+                observation = np.zeros((1012, 34), dtype=np.float32)
+                observation[plane, tile] = value
+                game = FakeGame()
+                game.take_obs = lambda: [observation]
+                with self.assertRaisesRegex(InvalidLogData, 'observation'):
+                    validate_gameplays([game], max_seq_len=60)
+
     def test_rejects_action_not_allowed_by_mask(self):
         with self.assertRaisesRegex(InvalidLogData, 'mask'):
             validate_gameplays([FakeGame(legal=False)], max_seq_len=60)

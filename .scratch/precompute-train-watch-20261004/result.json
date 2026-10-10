@@ -1,0 +1,44 @@
+{
+  "completed_at": "2026-10-04T14:51:55.861354+08:00",
+  "training_pid": 257095,
+  "initial_batch_step": 0,
+  "observed_batch_step": 1100,
+  "new_batches_observed": 1100,
+  "new_samples_lower_bound": 1126400,
+  "chunks_consumed_lower_bound": 69,
+  "metrics": {
+    "loss": 4.347890377044678,
+    "dqn_loss": 0.5184428691864014,
+    "cql_loss": 0.7293345332145691,
+    "rank_loss": 0.9138731956481934,
+    "rank_accuracy": 0.6253320574760437,
+    "q_mean": 0.010260662995278835,
+    "q_target_mean": 0.01068040356040001
+  },
+  "observation_seconds": 120.0,
+  "checkpoint_exists": true,
+  "training_output": "/home/tml104/Mortal/artifacts/mortal_precomputed_v2",
+  "train_log": "/home/tml104/Mortal/.scratch/precompute-train-watch-20261004/train.log",
+  "verification": {
+    "generation_id": "d43ab623972e4143b380c601908b027a",
+    "chunk_size": 16384,
+    "splits": {
+      "train": {
+        "chunks": 51197,
+        "samples": 838796504,
+        "source_files": 1277544
+      },
+      "val": {
+        "chunks": 6977,
+        "samples": 114305380,
+        "source_files": 173553
+      }
+    },
+    "volume_bytes": {
+      "c": 182143324309,
+      "d": 472439874783
+    },
+    "extra_files": {},
+    "content_checked": false
+  }
+}

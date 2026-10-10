@@ -1,0 +1,72 @@
+{
+  "model": {
+    "version": 4,
+    "conv_channels": 192,
+    "num_blocks": 40,
+    "freeze_bn": false
+  },
+  "batch_size": 2048,
+  "completed_epochs": 3,
+  "samples_seen": 12309,
+  "batches_completed": 9,
+  "fixed_subset_samples": 2051,
+  "full_validation_samples": 4103,
+  "bn_updates": 9,
+  "cpu_mjai": "passed",
+  "gpu_amp_mjai": "passed",
+  "match": {
+    "average_rank": 2.5,
+    "average_rank_points": 0.0,
+    "challenger": {
+      "checkpoint": "/tmp/tmpwd58kw1o/artifacts/training/latest.pth",
+      "device": "cuda:0",
+      "enable_amp": true,
+      "enable_quick_eval": true,
+      "enable_rule_based_agari_guard": true,
+      "model_spec": {
+        "conv_channels": 192,
+        "freeze_bn": false,
+        "num_blocks": 40,
+        "version": 4
+      },
+      "name": "MortalConv2d"
+    },
+    "champion": {
+      "checkpoint": "/tmp/tmpwd58kw1o/artifacts/training/latest.pth",
+      "device": "cuda:0",
+      "enable_amp": true,
+      "enable_quick_eval": true,
+      "enable_rule_based_agari_guard": true,
+      "model_spec": {
+        "conv_channels": 192,
+        "freeze_bn": false,
+        "num_blocks": 40,
+        "version": 4
+      },
+      "name": "MortalConv2d"
+    },
+    "games_completed": 8,
+    "games_per_batch": 4,
+    "games_requested": 8,
+    "rank_proportions": [
+      0.25,
+      0.25,
+      0.25,
+      0.25
+    ],
+    "rankings": [
+      2,
+      2,
+      2,
+      2
+    ],
+    "rayon_threads": 4,
+    "save_logs": true,
+    "seed_key": 8192,
+    "seed_start": 10000,
+    "seeds_completed": 2,
+    "status": "complete",
+    "torch_threads": 8
+  },
+  "note": "isolated dataset and model artifacts removed by TemporaryDirectory"
+}

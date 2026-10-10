@@ -1,0 +1,1 @@
+{"name": "compile-dynamic-reader", "args": ["--compile", "dynamic", "--source", "reader", "--steps", "180"], "timeout": 420}

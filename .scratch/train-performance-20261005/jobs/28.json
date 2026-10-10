@@ -1,0 +1,1 @@
+{"name": "layout-compile-reader-2048", "args": ["--layout", "--compile", "static", "--source", "reader", "--batch", "2048", "--steps", "120"], "timeout": 420}

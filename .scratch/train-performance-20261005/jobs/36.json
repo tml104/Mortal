@@ -1,0 +1,1 @@
+{"name": "compile-dynamic-validation", "args": ["--compile", "dynamic", "--source", "reader", "--steps", "120", "--validate-cycle"], "timeout": 420}

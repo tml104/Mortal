@@ -1,0 +1,51 @@
+{
+  "status": "ok",
+  "name": "compile-dynamic-validation",
+  "batch": 1024,
+  "source": "reader",
+  "sync_metrics": true,
+  "check_mask": true,
+  "compile": "dynamic",
+  "fused": false,
+  "precision": "fp16",
+  "layout": false,
+  "layout_probe_max_abs_diff": null,
+  "torch_threads": 8,
+  "warmup_seconds": 23.230594374006614,
+  "steps": 120,
+  "seconds": 9.015998062997824,
+  "samples_per_second": 13629.106743523671,
+  "ms_per_batch": 75.13331719164853,
+  "peak_allocated_gib": 2.988689422607422,
+  "peak_reserved_gib": 3.21875,
+  "metrics_finite": true,
+  "optimizer_updates": 120,
+  "parameter_max_abs_change": 0.004468885716050863,
+  "validation_cycles": [
+    {
+      "seconds": 29.933661072995164,
+      "sample_count": 131072,
+      "loss": 3.1595781166106462,
+      "dqn_loss": 0.40136157418601215,
+      "cql_loss": 0.521387446206063,
+      "rank_loss": 0.7563966084271669,
+      "rank_accuracy": 0.6842193603515625,
+      "q_mean": -0.0052740949831786565,
+      "q_target_mean": 0.006503024467747309
+    },
+    {
+      "seconds": 3.3916180249943864,
+      "sample_count": 131072,
+      "loss": 3.1561504546552896,
+      "dqn_loss": 0.4010468970518559,
+      "cql_loss": 0.5207657008431852,
+      "rank_loss": 0.7563751931302249,
+      "rank_accuracy": 0.6845855712890625,
+      "q_mean": -0.007217266791485599,
+      "q_target_mean": 0.006503024467747309
+    }
+  ],
+  "updates_after_validation_and_tail": 7,
+  "tail_batch_samples": 216,
+  "cycle_peak_reserved_gib": 3.3515625
+}

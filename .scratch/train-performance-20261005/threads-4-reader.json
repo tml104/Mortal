@@ -1,0 +1,20 @@
+{
+  "status": "ok",
+  "name": "threads-4-reader",
+  "batch": 1024,
+  "source": "reader",
+  "sync_metrics": true,
+  "check_mask": true,
+  "compile": "none",
+  "fused": false,
+  "precision": "fp16",
+  "torch_threads": 4,
+  "warmup_seconds": 3.456884254992474,
+  "steps": 60,
+  "seconds": 5.655118913986371,
+  "samples_per_second": 10864.493025609978,
+  "ms_per_batch": 94.25198189977286,
+  "peak_allocated_gib": 4.015073776245117,
+  "peak_reserved_gib": 4.25390625,
+  "metrics_finite": true
+}

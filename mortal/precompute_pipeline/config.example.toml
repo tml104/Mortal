@@ -20,9 +20,10 @@ c_budget_gib = 320
 d_budget_gib = 440
 chunk_size = 16384
 file_batch_size = 4
+log_every_chunks = 1
 compression_level = 1
-rayon_threads = 4
-torch_threads = 4
+rayon_threads = 16
+torch_threads = 1
 
 [reward]
 state_file = "./artifacts/grp_transformer.pth"

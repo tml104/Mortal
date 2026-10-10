@@ -1,0 +1,1 @@
+{"name": "layout-reduce-reader-2048", "args": ["--layout", "--compile", "reduce", "--source", "reader", "--batch", "2048", "--steps", "180"], "timeout": 420}

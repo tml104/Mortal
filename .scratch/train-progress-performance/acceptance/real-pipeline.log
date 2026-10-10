@@ -1,0 +1,59 @@
+event=start epoch=1 target_epochs=3 samples=0 batches=0 saved_batch=0 elapsed_s=0.92 device=cuda:0 batch_size=2048 execution=conv2d_channels_last_compile_reduce_overhead compile_threads=2 torch_threads=8 epoch_sample=0
+event=prepare epoch=1 target_epochs=3 samples=0 batches=0 saved_batch=0 elapsed_s=0.92 first_compile=pending
+event=prepared epoch=1 target_epochs=3 samples=0 batches=0 saved_batch=0 elapsed_s=1.55 first_compile=pending
+event=checkpoint epoch=1 target_epochs=3 samples=0 batches=0 saved_batch=0 elapsed_s=1.63 kind=initial path=/tmp/tmpwd58kw1o/artifacts/training/latest.pth
+event=first_batch_start epoch=1 target_epochs=3 samples=0 batches=0 saved_batch=0 elapsed_s=1.83 actual_batch=2048
+/home/tml104/miniconda3/envs/mortal/lib/python3.12/site-packages/torch/jit/_script.py:365: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+event=first_batch_end epoch=1 target_epochs=3 samples=2048 batches=1 saved_batch=0 elapsed_s=8.77 actual_batch=2048 first_window_includes_compile=True
+event=train epoch=1 target_epochs=3 samples=4096 batches=2 saved_batch=0 elapsed_s=9.27 epoch_samples=4096/4103 percent=99.83 run_samples_s=441.68 train_samples_s=535.86 eta_s=0.0 metric_kind=window loss=10.0173 dqn_loss=0.229569 cql_loss=1.90205 rank_loss=1.38714 rank_accuracy=0.249756 q_mean=0.00748216 q_target_mean=-0.013341
+event=validation_start epoch=1 target_epochs=3 samples=4096 batches=2 saved_batch=0 elapsed_s=9.28 kind=periodic validation_total=2051
+event=validation epoch=1 target_epochs=3 samples=4096 batches=2 saved_batch=0 elapsed_s=13.23 kind=periodic validation_samples=2051/2051 percent=100.00 validation_samples_s=518.08 eta_s=0.0
+event=validation_end epoch=1 target_epochs=3 samples=4096 batches=2 saved_batch=0 elapsed_s=13.24 kind=periodic metric_kind=validation sample_count=2051 loss=10.197635014076921 dqn_loss=0.3280840773863771 cql_loss=1.9184356652952181 rank_loss=1.3868667103499102 rank_accuracy=0.2579229644221367 q_mean=0.007920802957303404 q_target_mean=0.02402755061572264
+event=checkpoint epoch=1 target_epochs=3 samples=4096 batches=2 saved_batch=2 elapsed_s=13.47 kind=periodic path=/tmp/tmpwd58kw1o/artifacts/training/latest.pth
+event=paused epoch=1 target_epochs=3 samples=4096 batches=2 saved_batch=2 elapsed_s=13.47 reason=bounded_run
+event=resume epoch=1 target_epochs=3 samples=4096 batches=2 saved_batch=2 elapsed_s=0.10 device=cuda:0 batch_size=2048 execution=conv2d_channels_last_compile_reduce_overhead compile_threads=2 torch_threads=8 epoch_sample=4096
+event=prepare epoch=1 target_epochs=3 samples=4096 batches=2 saved_batch=2 elapsed_s=0.10 first_compile=pending
+event=prepared epoch=1 target_epochs=3 samples=4096 batches=2 saved_batch=2 elapsed_s=0.29 first_compile=pending
+event=first_batch_start epoch=1 target_epochs=3 samples=4096 batches=2 saved_batch=2 elapsed_s=0.31 actual_batch=7
+event=first_batch_end epoch=1 target_epochs=3 samples=4103 batches=3 saved_batch=2 elapsed_s=1.39 actual_batch=7 first_window_includes_compile=True
+event=train epoch=1 target_epochs=3 samples=4103 batches=3 saved_batch=2 elapsed_s=1.39 epoch_samples=4103/4103 percent=100.00 run_samples_s=5.03 train_samples_s=6.37 eta_s=0.0 metric_kind=window loss=10.7556 dqn_loss=0.125368 cql_loss=2.07181 rank_loss=1.35589 rank_accuracy=0.571429 q_mean=-0.00994913 q_target_mean=0.197417
+event=validation_start epoch=1 target_epochs=3 samples=4103 batches=3 saved_batch=2 elapsed_s=1.39 kind=epoch validation_total=4103
+event=validation epoch=1 target_epochs=3 samples=4103 batches=3 saved_batch=2 elapsed_s=1.50 kind=epoch validation_samples=4096/4103 percent=99.83 validation_samples_s=38821.62 eta_s=0.0
+event=validation epoch=1 target_epochs=3 samples=4103 batches=3 saved_batch=2 elapsed_s=1.53 kind=epoch validation_samples=4103/4103 percent=100.00 validation_samples_s=28879.91 eta_s=0.0
+event=validation_end epoch=1 target_epochs=3 samples=4103 batches=3 saved_batch=2 elapsed_s=1.53 kind=epoch metric_kind=validation sample_count=4103 loss=10.15280479586418 dqn_loss=0.2870366836028191 cql_loss=1.9176995242888422 rank_loss=1.3863501887248255 rank_accuracy=0.2783329271264928 q_mean=0.0088862318839186 q_target_mean=0.026867965599029434
+event=checkpoint epoch=2 target_epochs=3 samples=4103 batches=3 saved_batch=3 elapsed_s=1.75 kind=epoch path=/tmp/tmpwd58kw1o/artifacts/training/latest.pth
+event=epoch_complete epoch=2 target_epochs=3 samples=4103 batches=3 saved_batch=3 elapsed_s=1.75 completed_epochs=1
+event=train epoch=2 target_epochs=3 samples=6151 batches=4 saved_batch=3 elapsed_s=2.37 epoch_samples=2048/4103 percent=49.91 run_samples_s=867.79 train_samples_s=1193.42 eta_s=1.7 metric_kind=window loss=9.88621 dqn_loss=0.240118 cql_loss=1.87383 rank_loss=1.38465 rank_accuracy=0.251582 q_mean=0.0634695 q_target_mean=0.00447858
+event=validation_start epoch=2 target_epochs=3 samples=6151 batches=4 saved_batch=3 elapsed_s=2.37 kind=periodic validation_total=2051
+event=validation epoch=2 target_epochs=3 samples=6151 batches=4 saved_batch=3 elapsed_s=2.45 kind=periodic validation_samples=2051/2051 percent=100.00 validation_samples_s=25995.96 eta_s=0.0
+event=validation_end epoch=2 target_epochs=3 samples=6151 batches=4 saved_batch=3 elapsed_s=2.45 kind=periodic metric_kind=validation sample_count=2051 loss=10.194001611182307 dqn_loss=0.32810371620866624 cql_loss=1.9177048546927316 rank_loss=1.386870043327726 rank_accuracy=0.26036079960994635 q_mean=0.00933660979113423 q_target_mean=0.02402755061572264
+event=checkpoint epoch=2 target_epochs=3 samples=6151 batches=4 saved_batch=4 elapsed_s=2.67 kind=periodic path=/tmp/tmpwd58kw1o/artifacts/training/latest.pth
+event=train epoch=2 target_epochs=3 samples=8206 batches=6 saved_batch=4 elapsed_s=2.85 epoch_samples=4103/4103 percent=100.00 run_samples_s=1441.39 train_samples_s=11437.09 eta_s=0.0 metric_kind=window loss=9.39574 dqn_loss=0.218813 cql_loss=1.78011 rank_loss=1.38194 rank_accuracy=0.291971 q_mean=0.098214 q_target_mean=-0.0297247
+event=validation_start epoch=2 target_epochs=3 samples=8206 batches=6 saved_batch=4 elapsed_s=2.85 kind=epoch validation_total=4103
+event=validation epoch=2 target_epochs=3 samples=8206 batches=6 saved_batch=4 elapsed_s=2.90 kind=epoch validation_samples=4096/4103 percent=99.83 validation_samples_s=90616.80 eta_s=0.0
+event=validation epoch=2 target_epochs=3 samples=8206 batches=6 saved_batch=4 elapsed_s=2.93 kind=epoch validation_samples=4103/4103 percent=100.00 validation_samples_s=50080.26 eta_s=0.0
+event=validation_end epoch=2 target_epochs=3 samples=8206 batches=6 saved_batch=4 elapsed_s=2.93 kind=epoch metric_kind=validation sample_count=4103 loss=10.147204273362407 dqn_loss=0.2870927742511974 cql_loss=1.9165687296642142 rank_loss=1.3863414417904178 rank_accuracy=0.28003899585669023 q_mean=0.00959896536901695 q_target_mean=0.026867965599029434
+event=checkpoint epoch=3 target_epochs=3 samples=8206 batches=6 saved_batch=6 elapsed_s=3.13 kind=epoch path=/tmp/tmpwd58kw1o/artifacts/training/latest.pth
+event=epoch_complete epoch=3 target_epochs=3 samples=8206 batches=6 saved_batch=6 elapsed_s=3.13 completed_epochs=2
+event=train epoch=3 target_epochs=3 samples=12302 batches=8 saved_batch=6 elapsed_s=3.36 epoch_samples=4096/4103 percent=99.83 run_samples_s=2439.03 train_samples_s=17809.08 eta_s=0.0 metric_kind=window loss=9.49163 dqn_loss=0.235787 cql_loss=1.79588 rank_loss=1.38216 rank_accuracy=0.286865 q_mean=0.101103 q_target_mean=-0.0127587
+event=validation_start epoch=3 target_epochs=3 samples=12302 batches=8 saved_batch=6 elapsed_s=3.37 kind=periodic validation_total=2051
+event=validation epoch=3 target_epochs=3 samples=12302 batches=8 saved_batch=6 elapsed_s=3.46 kind=periodic validation_samples=2051/2051 percent=100.00 validation_samples_s=22538.56 eta_s=0.0
+event=validation_end epoch=3 target_epochs=3 samples=12302 batches=8 saved_batch=6 elapsed_s=3.46 kind=periodic metric_kind=validation sample_count=2051 loss=10.187309536220154 dqn_loss=0.32810226140924337 cql_loss=1.9163664724116556 rank_loss=1.3868755190503823 rank_accuracy=0.2618235007313506 q_mean=0.009041219782165962 q_target_mean=0.02402755061572264
+event=checkpoint epoch=3 target_epochs=3 samples=12302 batches=8 saved_batch=8 elapsed_s=3.66 kind=periodic path=/tmp/tmpwd58kw1o/artifacts/training/latest.pth
+event=train epoch=3 target_epochs=3 samples=12309 batches=9 saved_batch=8 elapsed_s=3.71 epoch_samples=4103/4103 percent=100.00 run_samples_s=2212.18 train_samples_s=126.88 eta_s=0.0 metric_kind=window loss=10.4257 dqn_loss=0.0583667 cql_loss=2.01707 rank_loss=1.41016 rank_accuracy=0.285714 q_mean=0.0679263 q_target_mean=-0.143298
+event=validation_start epoch=3 target_epochs=3 samples=12309 batches=9 saved_batch=8 elapsed_s=3.71 kind=epoch validation_total=4103
+event=validation epoch=3 target_epochs=3 samples=12309 batches=9 saved_batch=8 elapsed_s=3.77 kind=epoch validation_samples=4096/4103 percent=99.83 validation_samples_s=74445.84 eta_s=0.0
+event=validation epoch=3 target_epochs=3 samples=12309 batches=9 saved_batch=8 elapsed_s=3.83 kind=epoch validation_samples=4103/4103 percent=100.00 validation_samples_s=33953.22 eta_s=0.0
+event=validation_end epoch=3 target_epochs=3 samples=12309 batches=9 saved_batch=8 elapsed_s=3.83 kind=epoch metric_kind=validation sample_count=4103 loss=10.142869779431992 dqn_loss=0.2871568269030872 cql_loss=1.9156885695056511 rank_loss=1.3863511407430538 rank_accuracy=0.2634657567633439 q_mean=0.00905390917622016 q_target_mean=0.026867965599029434
+event=checkpoint epoch=3 target_epochs=3 samples=12309 batches=9 saved_batch=9 elapsed_s=4.06 kind=epoch path=/tmp/tmpwd58kw1o/artifacts/training/latest.pth
+event=epoch_complete epoch=3 target_epochs=3 samples=12309 batches=9 saved_batch=9 elapsed_s=4.06 completed_epochs=3
+event=complete epoch=3 target_epochs=3 samples=12309 batches=9 saved_batch=9 elapsed_s=4.06
+event=evaluation_start games=8 games_per_batch=4 result=/tmp/tmpwd58kw1o/evaluations/run-i51rzv93/result.json
+event=evaluation_batch games=4/8 rankings=[1, 1, 1, 1] proportions=[0.25, 0.25, 0.25, 0.25] average_rank=2.500000 average_rank_points=0.000000 status=incomplete
+event=evaluation_batch games=8/8 rankings=[2, 2, 2, 2] proportions=[0.25, 0.25, 0.25, 0.25] average_rank=2.500000 average_rank_points=0.000000 status=complete
+.
+----------------------------------------------------------------------
+Ran 1 test in 96.225s
+
+OK

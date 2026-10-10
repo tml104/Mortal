@@ -1,0 +1,1 @@
+{"name":"bf16-resident","args":["--precision","bf16"]}

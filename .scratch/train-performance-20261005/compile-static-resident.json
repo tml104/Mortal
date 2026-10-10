@@ -1,0 +1,20 @@
+{
+  "status": "ok",
+  "name": "compile-static-resident",
+  "batch": 1024,
+  "source": "resident",
+  "sync_metrics": true,
+  "check_mask": true,
+  "compile": "static",
+  "fused": false,
+  "precision": "fp16",
+  "torch_threads": 8,
+  "warmup_seconds": 62.00331162101065,
+  "steps": 60,
+  "seconds": 4.400926888003596,
+  "samples_per_second": 13960.695454286719,
+  "ms_per_batch": 73.3487814667266,
+  "peak_allocated_gib": 2.9877400398254395,
+  "peak_reserved_gib": 3.220703125,
+  "metrics_finite": true
+}

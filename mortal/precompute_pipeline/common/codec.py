@@ -112,14 +112,20 @@ def _pack_bits(values):
     return np.packbits(values, axis=1, bitorder='little')
 
 
-def validate_observation_semantics(value):
-    """检查 v4 observation 的固定语义约束并返回连续 float32 数组。"""
+def _observation_array(value):
+    """核对观测形状和精度并提供连续数组，不扫描元素值。"""
     obs = np.asarray(value)
     if obs.dtype != np.float32:
         raise ValueError(f'obs 必须是 float32，实际为 {obs.dtype}')
     obs = np.ascontiguousarray(obs)
     if obs.ndim != 3 or obs.shape[1:] != (OBS_PLANES, OBS_TILES):
         raise ValueError(f'obs shape 必须是 (N,{OBS_PLANES},{OBS_TILES})，实际为 {obs.shape}')
+    return obs
+
+
+def validate_observation_semantics(value):
+    """供前置筛选完整检查观测语义，编码阶段仅复用结构约束。"""
+    obs = _observation_array(value)
     scalar_binary = obs[:, SCALAR_BINARY_PLANES, :]
     if not np.all(scalar_binary == scalar_binary[:, :, :1]):
         raise ValueError('语义为整行二值的 observation 通道出现逐牌变化')
@@ -138,7 +144,7 @@ def validate_observation_semantics(value):
 
 
 def _normalize_batch(batch):
-    obs = validate_observation_semantics(batch.obs)
+    obs = _observation_array(batch.obs)
     sample_count = len(obs)
     if sample_count <= 0:
         raise ValueError('chunk 至少需要一个样本')
@@ -179,17 +185,17 @@ def _normalize_batch(batch):
     if np.any(ranks < 0) or np.any(ranks > 3):
         raise ValueError('rank 超出 0..3')
 
-    scalar_binary = obs[:, SCALAR_BINARY_PLANES, :,]
-    scalar_binary = scalar_binary[:, :, 0]
-    tile_binary = obs[:, TILE_BINARY_PLANES, :]
-    scalar_float = obs[:, SCALAR_FLOAT_PLANES, :,]
+    # 标量只复制首列；逐牌二值先连续提取并缩为 uint8，避免 reshape 搬运 float32 大副本。
+    scalar_binary = obs[:, SCALAR_BINARY_PLANES, 0]
+    tile_binary = np.take(obs, TILE_BINARY_PLANES, axis=1).astype(np.uint8)
+    scalar_float = obs[:, SCALAR_FLOAT_PLANES, 0]
 
     return (
         sample_count,
         scalar_binary,
         tile_binary,
-        scalar_float[:, :, 0],
-        obs[:, TILE_FLOAT_PLANES, :],
+        scalar_float,
+        np.take(obs, TILE_FLOAT_PLANES, axis=1),
         actions,
         masks,
         steps,

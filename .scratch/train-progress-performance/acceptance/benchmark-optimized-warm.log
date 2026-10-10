@@ -1,0 +1,37 @@
+event=migrated source=/tmp/mortal-optimize-acceptance/source.pth target=/tmp/mortal-optimize-acceptance/artifacts/optimized-warm/latest.pth batches=2837000 samples=2905085576 epoch_sample=388696064 metric_window=cleared next_log=2837050 next_save=2837500
+event=resume epoch=4 target_epochs=30 samples=2905085576 batches=2837000 saved_batch=2837000 elapsed_s=0.14 device=cuda:0 batch_size=2048 execution=conv2d_channels_last_compile_reduce_overhead compile_threads=2 torch_threads=8 epoch_sample=388696064
+event=prepare epoch=4 target_epochs=30 samples=2905085576 batches=2837000 saved_batch=2837000 elapsed_s=0.14 first_compile=pending
+event=prepared epoch=4 target_epochs=30 samples=2905085576 batches=2837000 saved_batch=2837000 elapsed_s=0.55 first_compile=pending
+event=first_batch_start epoch=4 target_epochs=30 samples=2905085576 batches=2837000 saved_batch=2837000 elapsed_s=1.20 actual_batch=2048
+event=first_batch_end epoch=4 target_epochs=30 samples=2905087624 batches=2837001 saved_batch=2837000 elapsed_s=6.03 actual_batch=2048 first_window_includes_compile=True
+event=train epoch=4 target_epochs=30 samples=2905187976 batches=2837050 saved_batch=2837000 elapsed_s=11.76 epoch_samples=388798464/838796504 percent=46.35 run_samples_s=8707.07 train_samples_s=9442.30 eta_s=47657.7 metric_kind=window loss=2.90778 dqn_loss=0.367683 cql_loss=0.478916 rank_loss=0.727579 rank_accuracy=0.694932 q_mean=0.0130278 q_target_mean=0.0102424
+event=train epoch=4 target_epochs=30 samples=2905290376 batches=2837100 saved_batch=2837000 elapsed_s=17.20 epoch_samples=388900864/838796504 percent=46.36 run_samples_s=11910.20 train_samples_s=18842.28 eta_s=23876.9 metric_kind=window loss=2.91499 dqn_loss=0.374404 cql_loss=0.479471 rank_loss=0.716148 rank_accuracy=0.703115 q_mean=0.00724567 q_target_mean=0.00803951
+event=train epoch=4 target_epochs=30 samples=2905392776 batches=2837150 saved_batch=2837000 elapsed_s=22.42 epoch_samples=389003264/838796504 percent=46.38 run_samples_s=13703.82 train_samples_s=19610.73 eta_s=22936.1 metric_kind=window loss=2.93393 dqn_loss=0.363718 cql_loss=0.485882 rank_loss=0.704006 rank_accuracy=0.709922 q_mean=0.00998361 q_target_mean=0.0104171
+event=validation_start epoch=4 target_epochs=30 samples=2905454216 batches=2837180 saved_batch=2837000 elapsed_s=25.66 kind=periodic validation_total=131072
+event=validation epoch=4 target_epochs=30 samples=2905454216 batches=2837180 saved_batch=2837000 elapsed_s=29.46 kind=periodic validation_samples=102400/131072 percent=78.12 validation_samples_s=26756.28 eta_s=1.1
+event=validation epoch=4 target_epochs=30 samples=2905454216 batches=2837180 saved_batch=2837000 elapsed_s=29.92 kind=periodic validation_samples=131072/131072 percent=100.00 validation_samples_s=30572.62 eta_s=0.0
+event=validation_end epoch=4 target_epochs=30 samples=2905454216 batches=2837180 saved_batch=2837000 elapsed_s=29.92 kind=periodic metric_kind=validation sample_count=131072 loss=3.0734768435359 dqn_loss=0.39232907723635435 cql_loss=0.506546373013407 rank_loss=0.7420794144272804 rank_accuracy=0.690643310546875 q_mean=-0.022135464310849784 q_target_mean=0.006503024240373634
+event=checkpoint epoch=4 target_epochs=30 samples=2905454216 batches=2837180 saved_batch=2837180 elapsed_s=30.24 kind=periodic path=/tmp/mortal-optimize-acceptance/artifacts/optimized-warm/latest.pth
+event=train epoch=4 target_epochs=30 samples=2905454216 batches=2837180 saved_batch=2837180 elapsed_s=30.24 epoch_samples=389064704/838796504 percent=46.38 run_samples_s=12189.43 train_samples_s=19085.77 eta_s=23563.7 metric_kind=window loss=2.87956 dqn_loss=0.372202 cql_loss=0.471985 rank_loss=0.737153 rank_accuracy=0.68999 q_mean=0.00461352 q_target_mean=0.00570591
+event=paused epoch=4 target_epochs=30 samples=2905454216 batches=2837180 saved_batch=2837180 elapsed_s=30.24 reason=bounded_run
+{
+  "kind": "optimized-warm",
+  "source_batch": 2837000,
+  "source_samples": 2905085576,
+  "batch_size": 2048,
+  "new_batches": 180,
+  "new_samples": 368640,
+  "elapsed_s": 30.281149885999184,
+  "overall_samples_s": 12173.910217671248,
+  "first_batch_s": 4.830694513999333,
+  "stable_samples": 266240,
+  "stable_elapsed_s": 13.87802057099907,
+  "stable_samples_s": 19184.29207089967,
+  "rss_peak_bytes": 3111473152,
+  "cuda_allocated_peak_bytes": 6272754176,
+  "cuda_reserved_peak_bytes": 7656701952,
+  "card_observed_peak_bytes": 9440854016,
+  "completed_batch": 2837180,
+  "completed_samples": 2905454216,
+  "timing_note": "first metric window excluded; explicit validation/save time subtracted from stable segment; all real updates counted"
+}

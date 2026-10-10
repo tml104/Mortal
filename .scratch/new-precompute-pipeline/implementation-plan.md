@@ -1,6 +1,6 @@
 # 新预计算链路完整实施方案
 
-状态：Q1–Q38 均已实现并完成有限验收；并行筛选优化的正式规格与实现证据见 [并行牌谱筛选](../quarantine-parallelism/spec.md)。未执行全量筛选、数百 GiB 缓存生成或正式长训练。
+状态：Q1–Q38 已实现并完成有限验收；Q39–Q44 的[预计算进度日志与编码提速](../precompute-progress-performance/spec.md)已实现，验收记录见[结果](../precompute-progress-performance/acceptance.md)。此前的[并行筛选优化](../quarantine-parallelism/spec.md)已完成；本轮不启动全量数据处理或正式训练。
 
 讨论记录见 [spec.md](spec.md)，磁盘估算见 [space-estimate.md](space-estimate.md)，当前硬件的内存/显存测量见 [resource-estimate.md](resource-estimate.md)。已确认取舍记录于 [ADR 0001](../../docs2/adr/0001-frozen-precomputed-samples.md)。
 
@@ -31,6 +31,7 @@ mortal/precompute_pipeline/
     tests/
   precompute/
     precompute.py
+    progress.py
     samples.py
     storage.py
     tests/
@@ -54,6 +55,7 @@ mortal/precompute_pipeline/
 | `precompute/samples.py` | Rust 批量提取、CPU GRP 奖励、六元样本构造 |
 | `precompute/storage.py` | 两盘配额、目标盘选择、chunk 写入、预计算进度提交及未提交文件清理 |
 | `precompute/precompute.py` | 文件排序、固定样本数 buffer、跨文件分块、恢复和 CLI |
+| `precompute/progress.py` | 本次运行的提交进度、增量速度、ETA、五段计时与即时终端输出 |
 | `train/reader.py` | 两级确定性打乱、直接定位、CPU 单块预取、跨 chunk batch |
 | `train/train.py` | 训练 CLI、模型与优化器初始化、训练与验证循环、checkpoint 恢复与保存、指标和 TensorBoard |
 | `config.example.toml` | 已确认参数的独立配置示例 |
@@ -75,7 +77,7 @@ mortal/precompute_pipeline/
 | 观测与样本 | v4 `(1012,34)`；四家；无 Oracle、无增强；六元样本 |
 | GRP | `artifacts/grp_transformer.pth`；128 维、4 头、4 层、60 局容量；CPU float64/eval |
 | 名次效用与折扣 | `[6,4,2,0]`；gamma=1，训练时应用折扣 |
-| 生成 | 每批四份牌谱；Rust/PyTorch CPU 线程默认各 4，均可配置 |
+| 生成 | 每批四份牌谱；Rust/PyTorch CPU 默认 16/1，均可配置 |
 | chunk | 默认 16,384 样本，可配置；各 split 最后余量单独成块 |
 | 编码 | 四类固定语义；观测 float32 无损；奖励 float64；Zstd level 1 |
 | 主模型 | Brain 192 通道、40 块；DQN v4；AuxNet 四类顺位；BN 正常更新 |
@@ -86,6 +88,7 @@ mortal/precompute_pipeline/
 | 轮数与随机 | 默认 1 epoch，可增加；从头时生成随机主 seed，各轮重新确定性打乱 |
 | 读取 | 当前 chunk 保持紧凑表示，按 batch 在设备展开；CPU 最多预取一个 chunk |
 | 日志与保存 | 每 100 batch 写汇总；每 1,000 batch 周期验证并保存，可配置 |
+| 预计算进度 | log_every_chunks=1；提交后即时输出进度、增量速度、split ETA、磁盘用量和五段累计耗时 |
 | 验证 | 固定 131,072 样本，不足时全取；validation_seed=0；每轮结束全量 val |
 | 隔离 | 保留 split/相对目录；每 100 文件提交筛选进度；JSONL 记录原因 |
 | 筛选并行 | spawn 进程池；8 workers × 2 Rayon；最大在途 16；终端输出速度、ETA 与阶段耗时 |
@@ -131,6 +134,10 @@ obs, action, mask, steps_to_done, kyoku_reward, player_rank
 
 使用预分配的定长样本数组作为 buffer，逐段填入；达到 16,384 条即编码提交，重置逻辑长度并继续使用。牌谱可以被 chunk 边界切开。避免将整块 observation 再 `stack` 成第二份同样大的数组。各 split 正常结束时将最后不足一块的余量提交；中断时不额外提交半满 buffer。
 
+Q39–Q41 的日志方案已实现。启动/恢复、目录扫描开始、split 切换和完成均即时输出；默认每成功提交一个 chunk 输出一次，间隔可配置，最后余量仍输出。进度包括当前 split、完整提交牌谱数/总数及百分比、累计已提交 chunks/样本、本次耗时、牌谱/样本速度、当前 split 的 ETA、C/D 用量与预算、游标和样本 offset。内存 buffer 不算已提交成果，文件内断点不提前计作完整牌谱；恢复后的累计成果保留，速度仅统计本次增量。
+
+日志同时显示 Rust/libriichi 提取、GRP 推理、Python 样本整理、编码压缩、写盘与进度提交五段累计耗时。统计只用于终端，及时 flush，不加入进度 JSON；不增加阻塞调用中的定时心跳。
+
 ## 5. chunk 格式
 
 每个文件是一个 Zstd 压缩帧，解压后为短版本头部、样本数和固定顺序的数组。采用固定字节序与格式版本；不使用 pickle，不保存每样本来源坐标。
@@ -147,6 +154,8 @@ obs, action, mask, steps_to_done, kyoku_reward, player_rank
 | kyoku_reward | float64 |
 
 完整六元载荷为 10,764 B/样本，未计短头部和 Zstd 压缩。固定分类表以新 `common/codec.py` 内的 v4 布局为唯一代码定义，经源码核对和无损往返测试确认；生成时不重新按实际值猜测类别。
+
+Q42、Q44 的编码优化已实现：标量通道直接提取第一列，逐牌通道按连续布局选择，二值数组尽早转 uint8，以减少整行副本和 reshape 复制。筛选继续完整检查观测语义；编码信任已筛选且稳定的输入，省去整行一致性、观测二值取值及 NaN/Inf 的重复逐值检查，保留形状、dtype、字段长度、标签/mask、有限奖励等必要检查。固定布局、float32/float64 精度、位序、chunk schema 和训练 reader 保持兼容，不能删除筛选依赖的完整校验函数。
 
 读取时做必要的版本、样本数、长度检查，解压或格式错误直接抛出。完整观测和二值字段在目标设备恢复，CPU 保留紧凑表示。
 
@@ -186,6 +195,8 @@ C 总缓存预算 320 GiB，D 440 GiB；train 优先 D、再 C，val 在 C。按
 2. 在同一文件系统将其替换为正式 chunk。
 3. 原子更新 progress，包含下一条未提交源样本的位置和该块配额用量。
 4. JSON 成功后才能继续下一块；失败立即停止。
+
+新增的 chunk 成功进度日志也只能出现在第 3 步成功之后。日志周期和线程数属于可调整运行参数，不进入不可变生成契约；旧 schema、生成 ID 和已提交 chunks 可直接继续使用，不因本轮优化要求重建。
 
 恢复时只认可 JSON 已提交区间。先确定下一块 ID，清理该 ID 在两盘留下的未登记正式文件/临时文件，再按已提交字节数重新分配并生成。即使恢复前提高了某盘预算，同一未提交 ID 也不会在两盘留下两份有效副本。
 
@@ -231,6 +242,8 @@ TensorBoard 以已提交步数衔接，恢复时隐藏 checkpoint 之后的旧�
 
 当前 RTX 4090 上的六步合成测量：实际分配峰值约 4.18 GiB，显存池预留峰值约 4.45 GiB，进程 RSS 约 1.83 GiB。完整训练先按 6–8 GiB 显存、3–4 GiB 主机内存预算；生成按 6–8 GiB 主机内存预算。它们是分阶段预算，不相加，也不是完整新链路的实测上界。
 
+Q39–Q44 的隔离实验在固定 128 份牌谱、真实 D 盘临时输出上，测得原配置约 1,556 样本/秒、7.2 GiB 峰值 RSS；16/1/4 配合候选编码优化约 2,890 样本/秒、5.1 GiB。这些是前期临时实验结果；正式版本的有限验收另见[验收记录](../precompute-progress-performance/acceptance.md)，不将 1.86 倍提升或 5.1 GiB 视为全量承诺。方法与原始记录见[性能报告](precompute-performance.md)。
+
 实现顺序：
 
 1. 新配置、固定布局和无损 codec，先验证真实与构造样本的精确往返。
@@ -256,3 +269,5 @@ python mortal/precompute_pipeline/train/train.py --config "$PWD/mortal/precomput
 ```
 
 常规启动自动按各自持久化记录恢复；需要重新筛选时使用筛选入口的显式重扫选项。筛选入口默认使用配置中的 8×2 并行参数。
+
+预计算入口已支持周期日志、五段计时、16/1 默认线程和编码优化，启动命令不变。恢复沿用旧进度，只报告新增成功提交的成果；文件名、样本数和磁盘用量以运行时状态为准。

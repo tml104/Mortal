@@ -1,0 +1,57 @@
+{
+  "hardware": {
+    "cpu": "AMD Ryzen 7 9700X",
+    "logical_cpus": 16,
+    "wsl_memtotal_kib": 15934048,
+    "gpu": "NVIDIA GeForce RTX 4090",
+    "gpu_total_mib": 24564,
+    "driver": "595.97"
+  },
+  "software": {
+    "torch": "2.11.0+cu128",
+    "cuda": "12.8",
+    "cudnn": 91900
+  },
+  "live_config": {
+    "batch_size": 1024,
+    "num_epochs": 30,
+    "enable_amp": true,
+    "enable_compile": false,
+    "prefetch": true,
+    "save_every_batches": 1000,
+    "validation_samples": 131072
+  },
+  "live_sample": {
+    "seconds": 120.01318943500519,
+    "gpu_utilization_mean": 74.60504201680672,
+    "gpu_utilization_min": 54,
+    "gpu_utilization_max": 87,
+    "gpu_memory_mib_mean": 6710.64705882353,
+    "gpu_memory_mib_max": 6754,
+    "gpu_power_w_mean": 292.8146218487395,
+    "gpu_temperature_c_max": 60,
+    "cpu_cores_mean": 1.0786458073561476
+  },
+  "live_timing": {
+    "samples_per_second_including_periodic_validation": 10310.356538922224,
+    "seconds_per_100_train_batches_median_about": 9.35,
+    "seconds_per_100_batches_crossing_periodic_validation_median": 14.328290343284607,
+    "note": "30-minute window includes the preceding epoch-count restart; a single restart interval was 23.03s, ordinary periodic intervals were approximately 14s."
+  },
+  "disk_sample": {
+    "chunks_per_volume": 4,
+    "c_median_read_ms": 103.35462300281506,
+    "c_median_decode_ms": 122.86366099579027,
+    "d_median_read_ms": 74.92800500040175,
+    "d_median_decode_ms": 101.83993149985326,
+    "cache_dropped": false
+  },
+  "profiler": {
+    "baseline_3_batches_kernel_count": 12105,
+    "layout_conversion_kernel_count": 2205,
+    "layout_conversion_kernel_ms": 26.309613,
+    "total_kernel_ms": 177.216188,
+    "layout_conversion_fraction": 0.14846055147061396,
+    "layout_variant_conversion_count": 0
+  }
+}

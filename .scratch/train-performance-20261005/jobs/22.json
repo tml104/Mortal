@@ -1,0 +1,1 @@
+{"name": "compile-static-reader", "args": ["--source", "reader", "--compile", "static", "--steps", "120"], "timeout": 420}

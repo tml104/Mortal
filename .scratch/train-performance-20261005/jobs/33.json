@@ -1,0 +1,1 @@
+{"name": "compile-reduce-reader", "args": ["--compile", "reduce", "--source", "reader", "--steps", "180"], "timeout": 420}

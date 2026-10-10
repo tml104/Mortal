@@ -1,0 +1,1 @@
+{"name": "gpu-packed-reduce-reader", "args": ["--gpu-packed", "--compile", "reduce", "--source", "reader", "--steps", "180"], "timeout": 420}

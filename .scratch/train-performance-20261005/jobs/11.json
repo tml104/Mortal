@@ -1,0 +1,1 @@
+{"name":"threads-1-reader","args":["--source","reader","--threads","1"]}

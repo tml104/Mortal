@@ -20,9 +20,10 @@ c_budget_gib = 320
 d_budget_gib = 440
 chunk_size = 16384
 file_batch_size = 4
+log_every_chunks = 1
 compression_level = 1
-rayon_threads = 4
-torch_threads = 4
+rayon_threads = 16
+torch_threads = 1
 
 [reward]
 state_file = "./artifacts/grp_transformer.pth"
@@ -37,7 +38,7 @@ dataset_progress = "./data/precomputed_chunks/progress.json"
 output_dir = "./artifacts/mortal_precomputed_v2"
 device = "cuda:0"
 batch_size = 1024
-num_epochs = 1
+num_epochs = 30
 enable_amp = true
 enable_compile = false
 compile_dynamic = true

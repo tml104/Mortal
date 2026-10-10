@@ -1,0 +1,61 @@
+Traceback (most recent call last):
+  File "/home/tml104/Mortal/mortal/precompute_pipeline/train/train.py", line 604, in <module>
+    main()
+  File "/home/tml104/Mortal/mortal/precompute_pipeline/train/train.py", line 599, in main
+    result = run_training(pipeline_settings.training)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tml104/Mortal/mortal/precompute_pipeline/train/train.py", line 479, in run_training
+    sample_count, metrics = _train_batch(
+                            ^^^^^^^^^^^^^
+  File "/home/tml104/Mortal/mortal/precompute_pipeline/train/train.py", line 250, in _train_batch
+    sample_count, loss, metrics = _forward_metrics(
+                                  ^^^^^^^^^^^^^^^^^
+  File "/home/tml104/Mortal/mortal/precompute_pipeline/train/train.py", line 223, in _forward_metrics
+    phi = mortal(obs)
+          ^^^^^^^^^^^
+  File "/home/tml104/miniconda3/envs/mortal/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tml104/miniconda3/envs/mortal/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tml104/Mortal/mortal/model.py", line 156, in forward
+    phi = self.encoder(obs)
+          ^^^^^^^^^^^^^^^^^
+  File "/home/tml104/miniconda3/envs/mortal/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tml104/miniconda3/envs/mortal/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tml104/Mortal/mortal/model.py", line 106, in forward
+    return self.net(x)
+           ^^^^^^^^^^^
+  File "/home/tml104/miniconda3/envs/mortal/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tml104/miniconda3/envs/mortal/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tml104/miniconda3/envs/mortal/lib/python3.12/site-packages/torch/nn/modules/container.py", line 253, in forward
+    input = module(input)
+            ^^^^^^^^^^^^^
+  File "/home/tml104/miniconda3/envs/mortal/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tml104/miniconda3/envs/mortal/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tml104/Mortal/mortal/model.py", line 64, in forward
+    out = self.ca(out)
+          ^^^^^^^^^^^^
+  File "/home/tml104/miniconda3/envs/mortal/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tml104/miniconda3/envs/mortal/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/tml104/Mortal/mortal/model.py", line 25, in forward
+    max_out = self.shared_mlp(x.amax(-1))
+                              ^^^^^^^^^^
+KeyboardInterrupt

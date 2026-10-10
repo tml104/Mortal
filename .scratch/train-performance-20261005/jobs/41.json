@@ -1,0 +1,1 @@
+{"name": "reduce-marked-eval", "args": ["--compile", "reduce", "--source", "reader", "--steps", "60", "--validate-cycle", "--validation-cycles", "3", "--mark-eval"], "timeout": 420}
