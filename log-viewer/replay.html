@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>__TITLE__</title>
+    <link rel="stylesheet" href="replay.css">
+    <script id="replay-data" type="application/json">__EVENTS__</script>
+    <script src="replay-state.js" defer></script>
+    <script src="replay.js" defer></script>
+</head>
+<body>
+    <header><a href="index.html">← __COUNT__ 场列表</a><h1>__TITLE__</h1><span>四家手牌公开 · 评测回放</span></header>
+    <nav aria-label="回放控制">
+        <select id="round" aria-label="选择小局"></select>
+        <button id="prev">← 上一步</button><button id="play">播放</button><button id="next">下一步 →</button>
+        <label>速度 <select id="speed"><option value="1000">1×</option><option value="500">2×</option><option value="250">4×</option></select></label>
+        <input id="timeline" type="range" min="0" value="0" aria-label="动作进度">
+        <span id="position"></span>
+        <button id="viewpoint">切换视角</button>
+    </nav>
+    <main>
+        <section id="stage" aria-label="牌桌"><div id="board">
+            <div id="center">
+                <div id="seat-bottom" class="seat bottom"></div><div id="seat-right" class="seat right"></div>
+                <div id="seat-top" class="seat top"></div><div id="seat-left" class="seat left"></div>
+                <div id="round-title"></div><div id="round-sticks"></div>
+                <div id="dora"><small>宝牌指示</small><div id="dora-tiles"></div></div>
+            </div>
+        </div></section>
+        <aside>
+            <section class="summary"><h2 id="event-title"></h2><p id="event-details"></p></section>
+            <p class="weight-note">动作权重 = 模型 Q 值，越大越偏好。评测采用贪心决策；Q 值不是概率。<span class="selected-key">● 实际执行</span></p>
+            <section id="weights" aria-label="候选动作和权重"></section>
+            <section class="json-panel"><h2>当前事件 JSON</h2><pre id="json"></pre></section>
+        </aside>
+    </main>
+</body>
+</html>

@@ -1,0 +1,6 @@
+event=evaluation_start games=100 games_per_batch=20 result=/home/tml104/Mortal/artifacts/mortal_epoch8_evaluations_20261012/run-zzi0os8o/result.json
+event=evaluation_batch games=20/100 rankings=[3, 8, 3, 6] proportions=[0.15, 0.4, 0.15, 0.3] average_rank=2.600000 average_rank_points=-9.000000 status=incomplete
+event=evaluation_batch games=40/100 rankings=[9, 12, 7, 12] proportions=[0.225, 0.3, 0.175, 0.3] average_rank=2.550000 average_rank_points=-6.750000 status=incomplete
+event=evaluation_batch games=60/100 rankings=[15, 17, 9, 19] proportions=[0.25, 0.2833333333333333, 0.15, 0.31666666666666665] average_rank=2.533333 average_rank_points=-7.500000 status=incomplete
+event=evaluation_batch games=80/100 rankings=[22, 23, 13, 22] proportions=[0.275, 0.2875, 0.1625, 0.275] average_rank=2.437500 average_rank_points=0.562500 status=incomplete
+event=evaluation_batch games=100/100 rankings=[28, 29, 18, 25] proportions=[0.28, 0.29, 0.18, 0.25] average_rank=2.400000 average_rank_points=4.500000 status=complete

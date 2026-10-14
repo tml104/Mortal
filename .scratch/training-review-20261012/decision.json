@@ -1,0 +1,37 @@
+{
+  "time": "2026-10-12T10:29:26.241431+08:00",
+  "classification": "approximately_converged_at_current_learning_rate",
+  "action": "evaluate_100_hanchans_keep_training_paused",
+  "learning_rate": 0.0001,
+  "hyperparameters_changed": false,
+  "basis": {
+    "last_three_full_validation_losses": [
+      3.0108165740966797,
+      3.0196547508239746,
+      3.0158355236053467
+    ],
+    "last_three_full_validation_rank_accuracy": [
+      0.6994767785072327,
+      0.7007607221603394,
+      0.6987225413322449
+    ],
+    "best_full_validation_epoch": 5,
+    "recent_two_hour_validation_means": [
+      3.056149925504412,
+      3.0548518308003745,
+      3.05494799718752,
+      3.0545160678716807,
+      3.054187355115432,
+      3.055311712851891
+    ],
+    "recent_relative_mean_range": 0.0006424137964788347,
+    "epoch7_train_loss_mean": 2.9179765183531807,
+    "epoch8_partial_train_loss_mean": 2.916688427218215,
+    "epoch7_fixed_validation_mean": 3.0553915058154617,
+    "epoch8_partial_fixed_validation_mean": 3.0549659254066497,
+    "all_recorded_metrics_finite": true
+  },
+  "interpretation": "当前固定学习率下的离线加权目标已基本进入稳定平台，而非严格数学意义或对局强度的最终收敛。CQL仍有微小改善，评测用于检查实际相对强度。",
+  "challenger": "当前第8轮约91.8%的冻结保存点",
+  "champion": "保留的完成3轮、第4轮约46.3%的旧主模型，已迁移为Conv2d兼容格式"
+}

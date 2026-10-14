@@ -1,0 +1,6 @@
+event=evaluation_start games=100 games_per_batch=20 result=/home/tml104/Mortal/artifacts/mortal_training_evaluations_20261012/run-gs3c6ihv/result.json
+event=evaluation_batch games=20/100 rankings=[5, 4, 7, 4] proportions=[0.25, 0.2, 0.35, 0.2] average_rank=2.500000 average_rank_points=4.500000 status=incomplete
+event=evaluation_batch games=40/100 rankings=[10, 8, 11, 11] proportions=[0.25, 0.2, 0.275, 0.275] average_rank=2.575000 average_rank_points=-5.625000 status=incomplete
+event=evaluation_batch games=60/100 rankings=[13, 14, 17, 16] proportions=[0.21666666666666667, 0.23333333333333334, 0.2833333333333333, 0.26666666666666666] average_rank=2.600000 average_rank_points=-6.000000 status=incomplete
+event=evaluation_batch games=80/100 rankings=[15, 20, 23, 22] proportions=[0.1875, 0.25, 0.2875, 0.275] average_rank=2.650000 average_rank_points=-9.000000 status=incomplete
+event=evaluation_batch games=100/100 rankings=[20, 24, 28, 28] proportions=[0.2, 0.24, 0.28, 0.28] average_rank=2.640000 average_rank_points=-9.000000 status=complete

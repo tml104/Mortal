@@ -1,0 +1,32 @@
+# 从 ~/Mortal 启动；配置放在训练输出目录之外。
+[training]
+dataset_progress = "./data/precomputed_chunks/progress.json"
+output_dir = "/home/tml104/Mortal/artifacts/mortal_baseline_epoch4_progress46.3397pct_20261011"
+device = "cuda:0"
+batch_size = 2048
+num_epochs = 30
+enable_amp = true
+enable_cudnn_benchmark = true
+prefetch = true
+compile_threads = 2
+# torch_threads = 8  # 省略时使用 PyTorch 默认；不继承预计算线程。
+log_every_batches = 50
+save_every_batches = 500
+validation_samples = 131072
+validation_seed = 0
+
+[model]
+conv_channels = 192
+num_blocks = 40
+freeze_bn = false
+
+[loss]
+gamma = 1.0
+cql_weight = 5.0
+rank_weight = 0.2
+
+[optimizer]
+learning_rate = 1e-4
+betas = [0.9, 0.999]
+eps = 1e-8
+weight_decay = 0.1

@@ -1,0 +1,25 @@
+{
+  "phase": "paused",
+  "time": "2026-10-12T10:22:43.247057+08:00",
+  "pid": 289331,
+  "checkpoint": {
+    "completed_epochs": 7,
+    "current_epoch": 7,
+    "epoch_samples_consumed": 770082816,
+    "samples_seen": 6641658344,
+    "batches_completed": 4661500,
+    "last_validation": {
+      "kind": "periodic",
+      "at_batch": 4661500,
+      "sample_count": 131072,
+      "loss": 3.0465972051024437,
+      "dqn_loss": 0.3821429777890444,
+      "cql_loss": 0.5032658516429365,
+      "rank_loss": 0.7406247360631824,
+      "rank_accuracy": 0.6912078857421875,
+      "q_mean": 0.002417029292701045,
+      "q_target_mean": 0.006503024240373634
+    }
+  },
+  "frozen_checkpoint": "/home/tml104/Mortal/artifacts/mortal_training_review_20261012/current.pth"
+}

@@ -1,0 +1,9 @@
+{
+  "pid": 53069,
+  "time": "2026-10-12T14:16:35.416403+08:00",
+  "config": "/home/tml104/Mortal/.scratch/epoch8-review-20261012/evaluation.toml",
+  "log": "/home/tml104/Mortal/.scratch/epoch8-review-20261012/evaluation.log",
+  "games": 100,
+  "save_logs": true,
+  "training_paused": true
+}

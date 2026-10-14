@@ -1,0 +1,22 @@
+{
+  "time": "2026-10-11T07:09:26.352821+08:00",
+  "classification": "not_yet_confirmed_converged",
+  "action": "resume_unchanged_training",
+  "evaluation_started": false,
+  "hyperparameters_changed": false,
+  "basis": {
+    "epoch5_full_validation_loss": 3.0108165740966797,
+    "epoch6_full_validation_loss": 3.0196547508239746,
+    "epoch5_train_window_mean": 2.9221651693823105,
+    "epoch6_train_window_mean": 2.919764985621441,
+    "epoch5_fixed_validation_mean": 3.0594152225242865,
+    "epoch6_fixed_validation_mean": 3.0567587883335623,
+    "epoch5_rank_accuracy": 0.6994767785072327,
+    "epoch6_rank_accuracy": 0.7007607221603394,
+    "all_recorded_metrics_finite": true
+  },
+  "reason": "训练与固定验证的整轮窗口均值继续小幅改善；单次全量总损失回升主要来自DQN项，CQL与辅助任务继续改善。近期接近平台，但没有足够证据认定已收敛，也没有明确发散/无法优化的证据。依用户补充要求原配置续训。",
+  "initial_batch": 3875914,
+  "initial_samples_seen": 5032779024,
+  "frozen_epoch6_checkpoint": "/home/tml104/Mortal/artifacts/mortal_epoch6_review_20261011/epoch6.pth"
+}

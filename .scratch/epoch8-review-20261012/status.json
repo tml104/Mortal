@@ -1,0 +1,25 @@
+{
+  "phase": "paused",
+  "time": "2026-10-12T12:48:52.263811+08:00",
+  "watch_pid": 11532,
+  "training_pid": 11531,
+  "checkpoint": {
+    "completed_epochs": 8,
+    "current_epoch": 8,
+    "epoch_samples_consumed": 0,
+    "samples_seen": 6710372032,
+    "batches_completed": 4695052,
+    "last_validation": {
+      "kind": "epoch",
+      "at_batch": 4695052,
+      "sample_count": 114305380,
+      "loss": 3.0276537728189505,
+      "dqn_loss": 0.4023872796743549,
+      "cql_loss": 0.49610335495391195,
+      "rank_loss": 0.7237485474649719,
+      "rank_accuracy": 0.6994980113797357,
+      "q_mean": -0.09313301328341034,
+      "q_target_mean": 0.008337305516614562
+    }
+  }
+}

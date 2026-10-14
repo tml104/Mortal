@@ -1,0 +1,18 @@
+{
+  "python": "/home/tml104/miniconda3/envs/mortal/bin/python3.12",
+  "cwd": "/home/tml104/Mortal",
+  "environment": {},
+  "environment_keys": [
+    "OMP_NUM_THREADS",
+    "MKL_NUM_THREADS",
+    "OPENBLAS_NUM_THREADS",
+    "OMP_PROC_BIND",
+    "OMP_PLACES",
+    "NUMEXPR_NUM_THREADS",
+    "RAYON_NUM_THREADS",
+    "CUDA_VISIBLE_DEVICES",
+    "TORCHINDUCTOR_CACHE_DIR",
+    "TORCHINDUCTOR_COMPILE_THREADS",
+    "PYTORCH_CUDA_ALLOC_CONF"
+  ]
+}

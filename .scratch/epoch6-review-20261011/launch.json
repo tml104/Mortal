@@ -1,0 +1,14 @@
+{
+  "time": "2026-10-11T07:09:26.354838+08:00",
+  "pid": 289331,
+  "command": [
+    "/home/tml104/miniconda3/envs/mortal/bin/python3.12",
+    "mortal/precompute_pipeline/train_optimize/train.py",
+    "--config",
+    "/home/tml104/Mortal/mortal/precompute_pipeline/train_optimize/config.toml"
+  ],
+  "cwd": "/home/tml104/Mortal",
+  "environment_overrides": {},
+  "log": "/home/tml104/Mortal/.scratch/epoch6-review-20261011/resumed-training.log",
+  "initial_batch": 3875914
+}

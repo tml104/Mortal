@@ -1,0 +1,37 @@
+{
+  "phase": "complete",
+  "checked_at": "2026-10-12T14:26:45.720864+08:00",
+  "completed_epochs": 8,
+  "checkpoint_batch": 4695052,
+  "training_paused": true,
+  "classification": "approximately_converged_to_plateau_at_current_learning_rate",
+  "hyperparameters_changed": false,
+  "evaluation": {
+    "report": "/home/tml104/Mortal/artifacts/mortal_epoch8_evaluations_20261012/run-zzi0os8o/result.json",
+    "games_completed": 100,
+    "rankings": [
+      28,
+      29,
+      18,
+      25
+    ],
+    "rank_proportions": [
+      0.28,
+      0.29,
+      0.18,
+      0.25
+    ],
+    "average_rank": 2.4,
+    "average_rank_points": 4.5,
+    "challenger": "/home/tml104/Mortal/artifacts/mortal_epoch8_review_20261012/epoch8.pth",
+    "champion": "/home/tml104/Mortal/artifacts/mortal_baseline_epoch4_progress46.3397pct_20261011/latest.pth",
+    "logs_directory": "/home/tml104/Mortal/artifacts/mortal_epoch8_evaluations_20261012/run-zzi0os8o/logs",
+    "logs_verified": 100,
+    "gzip_and_game_boundaries_verified": true,
+    "seeds": 25,
+    "rotated_seats_per_seed": 4
+  },
+  "convergence_plot": "/home/tml104/Mortal/.scratch/epoch8-review-20261012/convergence.png",
+  "statistics": "/home/tml104/Mortal/.scratch/epoch8-review-20261012/analysis.json",
+  "earlier_partial_model_evaluation": "artifacts/mortal_training_evaluations_20261012/run-gs3c6ihv/result.json"
+}

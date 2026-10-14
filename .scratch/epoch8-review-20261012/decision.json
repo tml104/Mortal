@@ -1,0 +1,36 @@
+{
+  "time": "2026-10-12T14:16:35.414242+08:00",
+  "classification": "approximately_converged_to_plateau_at_current_learning_rate",
+  "action": "evaluate_complete_epoch8_100_hanchans",
+  "training_paused": true,
+  "hyperparameters_changed": false,
+  "full_epoch8_checkpoint": "/home/tml104/Mortal/artifacts/mortal_epoch8_review_20261012/epoch8.pth",
+  "basis": {
+    "full_validation_losses_epochs5_to8": [
+      3.0108165740966797,
+      3.0196547508239746,
+      3.0158355236053467,
+      3.027653694152832
+    ],
+    "epoch7_train_mean": 2.9179765183531807,
+    "epoch8_train_mean": 2.916582693811506,
+    "epoch7_fixed_validation_mean": 3.0553915058154617,
+    "epoch8_fixed_validation_mean": 3.054988206305155,
+    "recent_two_hour_fixed_validation_means": [
+      3.0548040662493023,
+      3.0544390347924564,
+      3.0554762308414167,
+      3.053761882048387,
+      3.0554478406906127,
+      3.055238617000295
+    ],
+    "dqn_mean_bias_contribution": [
+      5.1697418238801085e-05,
+      0.0051481124972103266
+    ],
+    "dqn_increase_explained_by_mean_bias_fraction": 0.7703587340129229,
+    "all_recorded_metrics_finite": true
+  },
+  "interpretation": "固定学习率下离线指标基本进入波动平台，继续训练收益很小；不代表全局最优或价值校准已完善。第8轮Q值均值偏移解释了DQN损失回升的大部分，正式对局评测检查策略相对强度。",
+  "prior_partial_epoch8_evaluation": "artifacts/mortal_training_evaluations_20261012/run-gs3c6ihv/result.json"
+}

@@ -1,0 +1,47 @@
+{
+  "phase": "resumed_training_confirmed",
+  "checked_at": "2026-10-11T07:12:26.308289+08:00",
+  "pid": 289331,
+  "initial_batch": 3875914,
+  "observed_batch": 3877300,
+  "new_batches_observed": 1386,
+  "new_samples_lower_bound": 2838528,
+  "chunks_consumed_lower_bound": 174,
+  "observation_seconds": 124.7,
+  "metrics": {
+    "loss": 2.942814350128174,
+    "dqn_loss": 0.3757822513580322,
+    "cql_loss": 0.4839487075805664,
+    "rank_loss": 0.7364429831504822,
+    "rank_accuracy": 0.6962109208106995,
+    "q_mean": 0.015194098465144634,
+    "q_target_mean": 0.012476897798478603
+  },
+  "checkpoint": {
+    "completed_epochs": 6,
+    "current_epoch": 6,
+    "epoch_samples_consumed": 2224128,
+    "samples_seen": 5035003152,
+    "batches_completed": 3877000,
+    "last_validation": {
+      "kind": "periodic",
+      "at_batch": 3877000,
+      "sample_count": 131072,
+      "loss": 3.057792518287897,
+      "dqn_loss": 0.37786147557199,
+      "cql_loss": 0.5064599793404341,
+      "rank_loss": 0.7381556555628777,
+      "rank_accuracy": 0.6938018798828125,
+      "q_mean": -0.056841256096959114,
+      "q_target_mean": 0.006503024240373634
+    }
+  },
+  "learning_rates": [
+    0.0001,
+    0.0001
+  ],
+  "same_contract_and_seed": true,
+  "configuration_unchanged": true,
+  "evaluation_started": false,
+  "training_log": "/home/tml104/Mortal/.scratch/epoch6-review-20261011/resumed-training.log"
+}

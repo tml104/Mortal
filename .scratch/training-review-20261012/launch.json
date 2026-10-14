@@ -1,0 +1,9 @@
+{
+  "pid": 629910,
+  "time": "2026-10-12T10:29:26.244131+08:00",
+  "config": "/home/tml104/Mortal/.scratch/training-review-20261012/evaluation.toml",
+  "log": "/home/tml104/Mortal/.scratch/training-review-20261012/evaluation.log",
+  "games": 100,
+  "save_logs": true,
+  "training_paused": true
+}

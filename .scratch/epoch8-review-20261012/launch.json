@@ -1,0 +1,15 @@
+{
+  "pid": 11531,
+  "starttime": "140925",
+  "time": "2026-10-12T11:13:09.932244+08:00",
+  "command": [
+    "/home/tml104/miniconda3/envs/mortal/bin/python3.12",
+    "mortal/precompute_pipeline/train_optimize/train.py",
+    "--config",
+    "/home/tml104/Mortal/mortal/precompute_pipeline/train_optimize/config.toml"
+  ],
+  "log": "/home/tml104/Mortal/.scratch/epoch8-review-20261012/training.log",
+  "target_completed_epochs": 8,
+  "hyperparameters_changed": false,
+  "earlier_evaluation": "artifacts/mortal_training_evaluations_20261012/run-gs3c6ihv/result.json"
+}

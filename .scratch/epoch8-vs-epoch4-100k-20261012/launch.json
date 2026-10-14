@@ -1,0 +1,16 @@
+{
+  "pid": 106639,
+  "started_at": "2026-10-12T10:52:47.187420+00:00",
+  "command": [
+    "/home/tml104/miniconda3/envs/mortal/bin/python",
+    "-u",
+    "/home/tml104/Mortal/mortal/precompute_pipeline/evaluation/evaluate.py",
+    "--config",
+    "/home/tml104/Mortal/.scratch/epoch8-vs-epoch4-100k-20261012/evaluation.toml"
+  ],
+  "config": "/home/tml104/Mortal/.scratch/epoch8-vs-epoch4-100k-20261012/evaluation.toml",
+  "log": "/home/tml104/Mortal/.scratch/epoch8-vs-epoch4-100k-20261012/evaluation.log",
+  "games": 100000,
+  "save_logs": false,
+  "output_dir": "/home/tml104/Mortal/artifacts/mortal_epoch8_vs_epoch4_100k_20261012"
+}
