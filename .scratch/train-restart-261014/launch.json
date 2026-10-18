@@ -1,0 +1,21 @@
+{
+  "started_at": "2026-10-14T10:20:21.852379+08:00",
+  "pid": 6300,
+  "command": [
+    "nohup",
+    "/home/tml104/miniconda3/envs/mortal/bin/python",
+    "/home/tml104/Mortal/mortal/precompute_pipeline/train_optimize/train.py",
+    "--config",
+    "/home/tml104/Mortal/mortal/precompute_pipeline/train_optimize/config.toml"
+  ],
+  "cwd": "/home/tml104/Mortal",
+  "output_dir": "/home/tml104/Mortal/artifacts/mortal_precomputed_optimize_261014",
+  "learning_rate": 1e-05,
+  "batch_size": 2048,
+  "num_epochs": 30,
+  "initialization": "random",
+  "status": "running_verified",
+  "process_checked_at": "2026-10-14T10:23:20.359231+08:00",
+  "process_state": "S",
+  "verification": "verification.json"
+}

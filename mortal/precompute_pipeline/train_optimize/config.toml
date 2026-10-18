@@ -1,7 +1,7 @@
 # 从 ~/Mortal 启动；配置放在训练输出目录之外。
 [training]
 dataset_progress = "./data/precomputed_chunks/progress.json"
-output_dir = "./artifacts/mortal_precomputed_optimize"
+output_dir = "./artifacts/mortal_precomputed_optimize_261014"
 device = "cuda:0"
 batch_size = 2048
 num_epochs = 30
@@ -26,7 +26,7 @@ cql_weight = 5.0
 rank_weight = 0.2
 
 [optimizer]
-learning_rate = 1e-4
+learning_rate = 1e-5
 betas = [0.9, 0.999]
 eps = 1e-8
 weight_decay = 0.1

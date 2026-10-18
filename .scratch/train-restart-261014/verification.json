@@ -1,0 +1,31 @@
+{
+  "verified_at": "2026-10-14T10:22:09.364821+08:00",
+  "checkpoint": "/home/tml104/Mortal/artifacts/mortal_precomputed_optimize_261014/latest.pth",
+  "log": "/home/tml104/Mortal/artifacts/mortal_precomputed_optimize_261014/log-261014-102028.log",
+  "batches_completed": 500,
+  "samples_seen": 1024000,
+  "optimizer_learning_rates": [
+    1e-05,
+    1e-05
+  ],
+  "optimizer_steps_min": 500,
+  "optimizer_steps_max": 500,
+  "main_seed": 2066902090794747632,
+  "last_validation": {
+    "kind": "periodic",
+    "at_batch": 500,
+    "sample_count": 131072,
+    "loss": 6.02299727499485,
+    "dqn_loss": 0.46683798590674996,
+    "cql_loss": 1.0559256915003061,
+    "rank_loss": 1.382654134184122,
+    "rank_accuracy": 0.27704620361328125,
+    "q_mean": 0.2499244981445372,
+    "q_target_mean": 0.006503024240373634
+  },
+  "all_model_tensors_finite": true,
+  "tensorboard_files": [
+    "/home/tml104/Mortal/artifacts/mortal_precomputed_optimize_261014/tensorboard/events.out.tfevents.1791944436.DESKTOP-4090.6300.0"
+  ],
+  "latest_train_line": "[261014-10:21:52] event=train epoch=1 target_epochs=30 samples=1024000 batches=500 saved_batch=0 elapsed_s=84.50 epoch_samples=1024000/838796504 percent=0.12 run_samples_s=12118.91 train_samples_s=20025.79 eta_s=41834.7 metric_kind=window loss=5.82246 dqn_loss=0.542666 cql_loss=1.0005 rank_loss=1.38653 rank_accuracy=0.272148 q_mean=0.0136144 q_target_mean=0.00682522"
+}

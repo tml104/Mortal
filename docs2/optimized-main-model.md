@@ -4,7 +4,7 @@
 
 以下命令的 PWD 均为 `~/Mortal`，并使用安装了 PyTorch 的 `mortal` Conda 环境。配置中的相对路径以 PWD 解析。当前实际训练配置继续由使用者管理，新示例不会覆盖它。
 
-当前这份旧训练模型已于 2026-10-08 完成首次配置与正式迁移，记录见[正式迁移结果](../.scratch/train-progress-performance/production-migration.md)。实际配置和新 checkpoint 已存在，后续直接使用“启动训练”一节；下方首次准备与迁移命令保留为其他初次切换的参考。
+此前的旧训练模型已于 2026-10-08 完成首次配置与正式迁移，记录见[正式迁移结果](../.scratch/train-progress-performance/production-migration.md)。2026-10-14 按用户要求，当前实际配置改为学习率 `1e-5`，在 `artifacts/mortal_precomputed_optimize_261014` 从随机初始化开始新训练，batch 2048、总目标 30 epoch；旧模型保留在原目录。本次新训练的后续启动和恢复直接使用“启动训练”一节，下方首次准备与迁移命令保留为其他初次切换的参考，不用于本次新训练。
 
 ## 首次准备配置
 
@@ -47,14 +47,14 @@ python mortal/precompute_pipeline/train_optimize/train.py \
 
 存在新 checkpoint 时从其中恢复；不存在时清理新训练专用目录的旧产物并随机初始化，但保留符合 `log-YYMMDD-hhmmss.log` 命名格式的历史日志文件。损坏或不兼容文件直接报错，不会按“从头训练”处理。模型、AdamW、AMP、CPU/CUDA RNG、种子、epoch 和样本游标共同提交。
 
-每次启动自动在模型保存目录中建立日志，同时向原 stdout/stderr 输出。默认位置示例为 `artifacts/mortal_precomputed_optimize/log-261010-000312.log`。前台运行无需额外重定向；后台可使用普通 nohup：
+每次启动自动在模型保存目录中建立日志，同时向原 stdout/stderr 输出。当前运行的日志为 `artifacts/mortal_precomputed_optimize_261014/log-261014-102028.log`；后续启动按新的启动时间命名。前台运行无需额外重定向；后台可使用普通 nohup：
 
 ```bash
 nohup python mortal/precompute_pipeline/train_optimize/train.py \
   --config "$PWD/mortal/precompute_pipeline/train_optimize/config.toml" &
 
-# 查看默认模型目录中最近更新的自动日志。
-tail -f "$(ls -t artifacts/mortal_precomputed_optimize/log-*.log | head -n 1)"
+# 查看当前配置的模型目录中最近更新的自动日志。
+tail -f "$(ls -t artifacts/mortal_precomputed_optimize_261014/log-*.log | head -n 1)"
 ```
 
 nohup 可能把终端副本追加到当前目录的 `nohup.out`，其中也能看到自动日志尚未建立前的启动错误；主要训练日志以模型目录的按运行文件为准。这里使用正常 shell 启动方式，没有额外托管或自动重启程序。中断后最多回退到上次完整 checkpoint；脚本不承诺收到终止信号时立即保存内存进度。

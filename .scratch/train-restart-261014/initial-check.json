@@ -1,0 +1,15 @@
+{
+  "phase": "initial_checkpoint",
+  "batches_completed": 0,
+  "samples_seen": 0,
+  "completed_epochs": 0,
+  "main_seed": 2066902090794747632,
+  "optimizer_learning_rates": [
+    1e-05,
+    1e-05
+  ],
+  "contract_learning_rate": 1e-05,
+  "optimizer_state_entries": 0,
+  "migration_metadata_present": false,
+  "model_format": "conv2d_channels_last_v4"
+}
