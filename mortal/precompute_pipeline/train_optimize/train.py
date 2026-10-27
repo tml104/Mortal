@@ -29,6 +29,9 @@ from precompute_pipeline.train_optimize.run_logging import (
 )
 
 
+TRAIN_LOG_EVERY_BATCHES = 250
+
+
 class LearningModel(nn.Module):
     """将三网络和损失放入同一可编译前向，原始参数仍独立保存。"""
 
@@ -278,13 +281,19 @@ def _run_training(settings, *, max_batches=None, started_at=None, clock=time.mon
                 log.processed(count)
                 if new_batches == 1:
                     log.emit('first_batch_end', progress, actual_batch=count, first_window_includes_compile=True)
-                if progress['batches_completed'] % settings.log_every_batches == 0:
+                metrics_due = progress['batches_completed'] % settings.log_every_batches == 0
+                train_log_due = progress['batches_completed'] % TRAIN_LOG_EVERY_BATCHES == 0
+                if metrics_due or train_log_due:
+                    # 日志复用当前指标窗口；仅 TensorBoard 周期清空指标累加器。
                     values = _metric_values(sums, metric_samples)
-                    _write_metrics(writer, values, 'train', progress['batches_completed'])
-                    writer.add_scalar('train/learning_rate', optimizer.param_groups[0]['lr'], progress['batches_completed'])
-                    log.training_progress(progress, reader.total_samples, values)
-                    sums.zero_()
-                    metric_samples = 0
+                    if metrics_due:
+                        _write_metrics(writer, values, 'train', progress['batches_completed'])
+                        writer.add_scalar('train/learning_rate', optimizer.param_groups[0]['lr'], progress['batches_completed'])
+                    if train_log_due:
+                        log.training_progress(progress, reader.total_samples, values)
+                    if metrics_due:
+                        sums.zero_()
+                        metric_samples = 0
                 epoch_finished = progress['epoch_samples_consumed'] == reader.total_samples
                 periodic_due = progress['batches_completed'] % settings.save_every_batches == 0
                 if periodic_due and not epoch_finished:
@@ -295,11 +304,8 @@ def _run_training(settings, *, max_batches=None, started_at=None, clock=time.mon
                     if metric_samples:
                         values = _metric_values(sums, metric_samples)
                         _write_metrics(writer, values, 'train', progress['batches_completed'])
-                        log.training_progress(progress, reader.total_samples, values, reset=False)
                     log.emit('paused', progress, reason='bounded_run')
                     return dict(progress)
-            if progress['batches_completed'] % settings.log_every_batches:
-                log.training_progress(progress, reader.total_samples, _metric_values(sums, metric_samples), reset=False)
             validation = _evaluate(settings, executor, log=log, progress=progress, output=output)
             _write_metrics(writer, validation, 'validation/epoch', progress['batches_completed'])
             progress.update(

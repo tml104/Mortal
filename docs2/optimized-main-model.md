@@ -61,7 +61,9 @@ nohup 可能把终端副本追加到当前目录的 `nohup.out`，其中也能�
 
 ## 周期、指标与终端日志
 
-默认每累计 50 个训练 batch 记录指标，每累计 500 个 batch 验证固定前 131072 条 val 样本并保存。验证 seed 为 0，顺序固定；小验证集使用全部样本。每个 epoch 结束执行全量 val；与周期重合时只做全量验证，不重复验证/保存。
+默认每累计 50 个训练 batch 向 TensorBoard 记录指标；终端与日志文件的 `event=train` 固定在累计 batch 数为 250 的倍数时输出，每累计 500 个 batch 验证固定前 131072 条 val 样本并保存。`log_every_batches` 继续控制 TensorBoard 指标窗口与验证进度日志，不控制 `event=train`。验证 seed 为 0，顺序固定；小验证集使用全部样本。每个 epoch 结束执行全量 val；与周期重合时只做全量验证，不重复验证/保存。
+
+`event=train` 的 loss、accuracy 等指标复用当时的 TensorBoard 指标窗口，当前配置下为最近 50 批的样本加权均值；速度则覆盖两条训练进度日志之间的实际训练时间，排除验证和保存。恢复后的首条日志仅统计本次启动以来的速度。epoch 结束或有限运行暂停时不额外补发不足 250 批的 `event=train`，仍输出对应的 `epoch_complete`、`paused` 等阶段事件，并保留原有 TensorBoard 尾部记录。
 
 TensorBoard 位于新输出目录的 `tensorboard` 子目录，横轴保持累计 batch，恢复 purge 边界为已保存 batch 加 1。迁移不减半历史 batch，也不把新 batch 大小乘以历史 batch 来估计样本数。比如从 123456 批迁移，下一日志和周期保存都是 123500。
 

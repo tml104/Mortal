@@ -23,7 +23,7 @@ pub const fn obs_shape(version: u32) -> (usize, usize) {
         2 => (942, 34),
         3 => (934, 34),
         4 => (1012, 34),
-        _ => unreachable!(),
+        _ => unreachable!(), // 用来标记一段按程序逻辑不应该执行到的代码，如果程序实际运行到了这里，它会触发 panic。
     }
 }
 

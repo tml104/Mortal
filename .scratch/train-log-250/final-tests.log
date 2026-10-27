@@ -1,0 +1,56 @@
+test_controlled_clock_excludes_save_validation_and_old_samples (precompute_pipeline.train_optimize.tests.test_training.OptimizedTrainingTests.test_controlled_clock_excludes_save_validation_and_old_samples) ... ok
+test_full_batches_tail_and_full_validation_commit (precompute_pipeline.train_optimize.tests.test_training.OptimizedTrainingTests.test_full_batches_tail_and_full_validation_commit) ... ok
+test_interrupted_run_restores_optimizer_rng_and_sample_suffix (precompute_pipeline.train_optimize.tests.test_training.OptimizedTrainingTests.test_interrupted_run_restores_optimizer_rng_and_sample_suffix) ... [261026-21:11:21] Traceback (most recent call last):
+[261026-21:11:21]   File "/home/tml104/Mortal/mortal/precompute_pipeline/train_optimize/train.py", line 171, in run_training
+[261026-21:11:21]     return _run_training(settings, max_batches=max_batches, started_at=started_at,
+[261026-21:11:21]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[261026-21:11:21]   File "/home/tml104/Mortal/mortal/precompute_pipeline/train_optimize/train.py", line 186, in _run_training
+[261026-21:11:21]     restored = load_checkpoint(latest, contract) if latest.exists() else None
+[261026-21:11:21]                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[261026-21:11:21]   File "/home/tml104/Mortal/mortal/precompute_pipeline/common/optimized_checkpoint.py", line 69, in load_checkpoint
+[261026-21:11:21]     raise RuntimeError('checkpoint 与当前数据或训练语义不兼容')
+[261026-21:11:21] RuntimeError: checkpoint 与当前数据或训练语义不兼容
+[261026-21:11:21] Traceback (most recent call last):
+[261026-21:11:21]   File "/home/tml104/Mortal/mortal/precompute_pipeline/train_optimize/train.py", line 171, in run_training
+[261026-21:11:21]     return _run_training(settings, max_batches=max_batches, started_at=started_at,
+[261026-21:11:21]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[261026-21:11:21]   File "/home/tml104/Mortal/mortal/precompute_pipeline/train_optimize/train.py", line 186, in _run_training
+[261026-21:11:21]     restored = load_checkpoint(latest, contract) if latest.exists() else None
+[261026-21:11:21]                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[261026-21:11:21]   File "/home/tml104/Mortal/mortal/precompute_pipeline/common/optimized_checkpoint.py", line 60, in load_checkpoint
+[261026-21:11:21]     raise RuntimeError(f'checkpoint 缺少字段: {missing}')
+[261026-21:11:21] RuntimeError: checkpoint 缺少字段: ['cuda_rng_state_all']
+ok
+test_log_failure_during_updates_keeps_previous_checkpoint (precompute_pipeline.train_optimize.tests.test_training.OptimizedTrainingTests.test_log_failure_during_updates_keeps_previous_checkpoint) ... ok
+test_progress_reports_processed_and_saved_positions (precompute_pipeline.train_optimize.tests.test_training.OptimizedTrainingTests.test_progress_reports_processed_and_saved_positions) ... ok
+test_swallowed_log_failure_before_commit_does_not_save_progress (precompute_pipeline.train_optimize.tests.test_training.OptimizedTrainingTests.test_swallowed_log_failure_before_commit_does_not_save_progress) ... ok
+test_validation_and_save_failure_keep_last_committed_checkpoint (precompute_pipeline.train_optimize.tests.test_training.OptimizedTrainingTests.test_validation_and_save_failure_keep_last_committed_checkpoint) ... ok
+test_250_batch_logs_preserve_metrics_validation_and_resume (precompute_pipeline.train_optimize.tests.test_training.TrainingLogCadenceTests.test_250_batch_logs_preserve_metrics_validation_and_resume)
+重用小块扩展样本流，实际跑过两个周期及暂停、恢复、epoch 尾批。 ... ok
+test_cli_failure_has_one_timestamped_traceback (precompute_pipeline.train_optimize.tests.test_run_logging.RunLoggingTests.test_cli_failure_has_one_timestamped_traceback) ... ok
+test_cli_missing_config_fails_on_terminal_without_log_directory (precompute_pipeline.train_optimize.tests.test_run_logging.RunLoggingTests.test_cli_missing_config_fails_on_terminal_without_log_directory) ... ok
+test_close_error_does_not_mask_or_repeat_training_exception (precompute_pipeline.train_optimize.tests.test_run_logging.RunLoggingTests.test_close_error_does_not_mask_or_repeat_training_exception) ... ok
+test_completed_run_writes_timestamped_file_and_terminal (precompute_pipeline.train_optimize.tests.test_run_logging.RunLoggingTests.test_completed_run_writes_timestamped_file_and_terminal) ... ok
+test_exception_is_recorded_before_streams_close_and_still_raises (precompute_pipeline.train_optimize.tests.test_run_logging.RunLoggingTests.test_exception_is_recorded_before_streams_close_and_still_raises) ... ok
+test_existing_python_logging_stderr_handler_is_captured_and_restored (precompute_pipeline.train_optimize.tests.test_run_logging.RunLoggingTests.test_existing_python_logging_stderr_handler_is_captured_and_restored) ... ok
+test_file_creation_write_and_flush_failures_abort_and_restore_streams (precompute_pipeline.train_optimize.tests.test_run_logging.RunLoggingTests.test_file_creation_write_and_flush_failures_abort_and_restore_streams) ... ok
+test_handler_created_during_training_is_restored (precompute_pipeline.train_optimize.tests.test_run_logging.RunLoggingTests.test_handler_created_during_training_is_restored) ... ok
+test_partial_history_line_and_interleaved_streams_remain_separate (precompute_pipeline.train_optimize.tests.test_run_logging.RunLoggingTests.test_partial_history_line_and_interleaved_streams_remain_separate) ... ok
+test_python_logging_cannot_swallow_file_failure (precompute_pipeline.train_optimize.tests.test_run_logging.RunLoggingTests.test_python_logging_cannot_swallow_file_failure) ... ok
+test_python_streams_fragments_warning_and_midnight (precompute_pipeline.train_optimize.tests.test_run_logging.RunLoggingTests.test_python_streams_fragments_warning_and_midnight) ... ok
+test_same_second_appends_and_later_start_uses_new_file (precompute_pipeline.train_optimize.tests.test_run_logging.RunLoggingTests.test_same_second_appends_and_later_start_uses_new_file) ... ok
+test_new_batches_preserve_old_shuffle_suffix (precompute_pipeline.train_optimize.tests.test_reader_and_settings.ReaderAndSettingsTests.test_new_batches_preserve_old_shuffle_suffix) ... ok
+test_training_config_defaults_without_unrelated_sections (precompute_pipeline.train_optimize.tests.test_reader_and_settings.ReaderAndSettingsTests.test_training_config_defaults_without_unrelated_sections) ... ok
+test_unavailable_training_mode_does_not_clear_output (precompute_pipeline.train_optimize.tests.test_reader_and_settings.ReaderAndSettingsTests.test_unavailable_training_mode_does_not_clear_output) ... [261026-21:11:37] Traceback (most recent call last):
+[261026-21:11:37]   File "/home/tml104/Mortal/mortal/precompute_pipeline/train_optimize/train.py", line 171, in run_training
+[261026-21:11:37]     return _run_training(settings, max_batches=max_batches, started_at=started_at,
+[261026-21:11:37]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[261026-21:11:37]   File "/home/tml104/Mortal/mortal/precompute_pipeline/train_optimize/train.py", line 203, in _run_training
+[261026-21:11:37]     raise RuntimeError('优化训练需要可用的 CUDA 设备')
+[261026-21:11:37] RuntimeError: 优化训练需要可用的 CUDA 设备
+ok
+
+----------------------------------------------------------------------
+Ran 23 tests in 24.354s
+
+OK

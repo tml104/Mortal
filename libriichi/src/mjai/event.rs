@@ -32,7 +32,7 @@ pub enum Event {
         bakaze: Tile,
         dora_marker: Tile,
         /// Counts from 1
-        #[serde_as(deserialize_as = "TryFromInto<BoundedU8<1, 4>>")]
+        #[serde_as(deserialize_as = "TryFromInto<BoundedU8<1, 4>>")] // 注意这里用了BoundedU8，范围限制在1-4
         kyoku: u8,
         honba: u8,
         kyotaku: u8,
@@ -130,10 +130,18 @@ pub struct OutOfBoundError(pub u8);
 /// An extended version of `Event` which allows metadata recording.
 #[skip_serializing_none]
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct EventExt {
+pub struct EventExt { // 在 `Event` 上附加可选 `Metadata`
     #[serde(flatten)]
     pub event: Event,
-    pub meta: Option<Metadata>,
+    pub meta: Option<Metadata>, // 可选的Metadata，包括：
+                               // - q_values: Option<Vec<f32>>, 合法动作Q值
+                               // - mask_bits: Option<u64>, 合法动作掩码
+                               // - is_greedy: Option<bool>, 是否为贪婪策略
+                               // - batch_size: Option<usize>, 批次大小
+                               // - eval_time_ns: Option<u64>, 评估时间（纳秒）耗时
+                               // - shanten: Option<i8>, 向听数
+                               // - at_furiten: Option<bool>, 是否振听
+                               // - kan_select: Option<Box<Metadata>>, 可选的嵌套杠选择结果（？）
 }
 
 #[skip_serializing_none]

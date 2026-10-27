@@ -1,0 +1,57 @@
+{
+  "pid": 33307,
+  "args": [
+    "/home/tml104/miniconda3/envs/mortal/bin/python",
+    "mortal/precompute_pipeline/train_optimize/train.py",
+    "--config",
+    "/home/tml104/Mortal/mortal/precompute_pipeline/train_optimize/config.toml"
+  ],
+  "cwd": "/home/tml104/Mortal",
+  "start_ticks": "981031",
+  "config": "/home/tml104/Mortal/mortal/precompute_pipeline/train_optimize/config.toml",
+  "output_dir": "/home/tml104/Mortal/artifacts/mortal_precomputed_optimize_261014",
+  "old_log": "/home/tml104/Mortal/artifacts/mortal_precomputed_optimize_261014/log-261026-125733.log",
+  "last_checkpoint_batch": 4084500,
+  "learning_rate": 1e-05,
+  "status": "verified_running",
+  "stop_command": "kill -TERM 33307",
+  "restart_checkpoint_batch": 4085000,
+  "checkpoint_line": "[261026-21:12:47] event=checkpoint epoch=10 target_epochs=30 samples=8366072728 batches=4085000 saved_batch=4085000 elapsed_s=29713.68 kind=periodic path=/home/tml104/Mortal/artifacts/mortal_precomputed_optimize_261014/latest.pth",
+  "stopped_at": "2026-10-26T21:12:47.815835+08:00",
+  "new_pid": 150970,
+  "start_command": "nohup setsid /home/tml104/miniconda3/envs/mortal/bin/python mortal/precompute_pipeline/train_optimize/train.py --config \"$PWD/mortal/precompute_pipeline/train_optimize/config.toml\" >> \"$PWD/nohup.out\" 2>&1 < /dev/null &",
+  "new_log": "/home/tml104/Mortal/artifacts/mortal_precomputed_optimize_261014/log-261026-211402.log",
+  "verified_at": "2026-10-26T21:16:27.592587+08:00",
+  "verified_train_batches": [
+    4085250,
+    4085500,
+    4085750,
+    4086000,
+    4086250
+  ],
+  "verified_saved_batch": 4086000,
+  "tensorboard_steps": [
+    4085050,
+    4085100,
+    4085150,
+    4085200,
+    4085250,
+    4085300,
+    4085350,
+    4085400,
+    4085450,
+    4085500
+  ],
+  "validation": {
+    "kind": "periodic",
+    "at_batch": 4086000,
+    "sample_count": 131072,
+    "loss": 3.0171507000923157,
+    "dqn_loss": 0.3792084171436727,
+    "cql_loss": 0.4981830711476505,
+    "rank_loss": 0.7351345056667924,
+    "rank_accuracy": 0.6940536499023438,
+    "q_mean": -0.02771662257873686,
+    "q_target_mean": 0.006503024240373634
+  }
+}

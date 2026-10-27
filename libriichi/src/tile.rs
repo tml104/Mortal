@@ -26,12 +26,14 @@ const DISCARD_PRIORITIES: [u8; 38] = [
     0, // unknown
 ];
 
+// LazyLock 会推迟其初始化至首次访问
+// Map: str -> Tile
 static MJAI_PAI_STRINGS_MAP: LazyLock<AHashMap<&'static str, Tile>> = LazyLock::new(|| {
     MJAI_PAI_STRINGS
-        .iter()
-        .enumerate()
-        .map(|(id, &s)| (s, Tile::try_from(id).unwrap()))
-        .collect()
+        .iter() // 数组类型为&str, 迭代器类型为&&str（不会立即消耗）
+        .enumerate() // 迭代器元素转换为元组： (0, &"1m") ……
+        .map(|(id, &s)| (s, Tile::try_from(id).unwrap())) // 上一行的元组映射到 (s, Tile(id as u8))，即(&str, Tile) （unwrap会取出Ok中的wrap，此转换必然成功）
+        .collect() // 消费由迭代器产生的键值对，构成AHashMap （等价于 .collect::<AHashMap<&'static str, Tile>>()）
 });
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
@@ -48,24 +50,24 @@ impl Tile {
     /// Calling this method with an out-of-bounds tile ID is undefined behavior.
     #[inline]
     #[must_use]
-    pub const fn new_unchecked(id: u8) -> Self {
+    pub const fn new_unchecked(id: u8) -> Self { // 由调用方保证范围
         Self(id)
     }
 
     #[inline]
     #[must_use]
-    pub const fn as_u8(self) -> u8 {
+    pub const fn as_u8(self) -> u8 { // 得到索引（注意这里使用移动语法，调用后不可再使用）
         self.0
     }
     #[inline]
     #[must_use]
-    pub const fn as_usize(self) -> usize {
+    pub const fn as_usize(self) -> usize { // 得到索引
         self.0 as usize
     }
 
     #[inline]
     #[must_use]
-    pub const fn deaka(self) -> Self {
+    pub const fn deaka(self) -> Self { // 红五变成普通5
         match self.0 {
             tu8!(5mr) => t!(5m),
             tu8!(5pr) => t!(5p),
@@ -76,7 +78,7 @@ impl Tile {
 
     #[inline]
     #[must_use]
-    pub const fn akaize(self) -> Self {
+    pub const fn akaize(self) -> Self { // 普通5变成红五
         match self.0 {
             tu8!(5m) => t!(5mr),
             tu8!(5p) => t!(5pr),
@@ -151,7 +153,7 @@ impl Tile {
 
     #[inline]
     #[must_use]
-    pub const fn augment(self) -> Self {
+    pub const fn augment(self) -> Self { // 交换万子与筒子，同时保留赤牌身份；索子、字牌与未知牌保留自身。
         if self.is_unknown() {
             return self;
         }
@@ -169,11 +171,11 @@ impl Tile {
     /// `Ordering::Equal` iff `self == other`
     #[inline]
     #[must_use]
-    pub fn cmp_discard_priority(self, other: Self) -> Ordering {
+    pub fn cmp_discard_priority(self, other: Self) -> Ordering { // cmp_discard_priority
         let l = self.0 as usize;
         let r = other.0 as usize;
-        match DISCARD_PRIORITIES[l].cmp(&DISCARD_PRIORITIES[r]) {
-            Ordering::Equal => r.cmp(&l),
+        match DISCARD_PRIORITIES[l].cmp(&DISCARD_PRIORITIES[r]) { // cmp: 返回Ordering::Greater、Ordering::Less、Ordering::Equal
+            Ordering::Equal => r.cmp(&l), // 表示把匹配到的结果绑定到变量 o，然后原样返回 （Less或者Greater）
             o => o,
         }
     }

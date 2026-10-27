@@ -20,6 +20,7 @@ from precompute_pipeline.train.tests.test_reader import build_dataset
 from precompute_pipeline.train.tests.test_train import training_settings
 from precompute_pipeline.common.optimized_checkpoint import load_checkpoint
 from precompute_pipeline.train_optimize.settings import OptimizedTrainingSettings
+from precompute_pipeline.train_optimize.reader import DatasetBatchReader
 from precompute_pipeline.train_optimize.train import run_training
 
 
@@ -36,6 +37,7 @@ def small_settings(root, progress):
 
 
 @unittest.skipUnless(torch.cuda.is_available(), '需要 CUDA 验证固定优化组合')
+@patch('precompute_pipeline.train_optimize.train.TRAIN_LOG_EVERY_BATCHES', 2)
 class OptimizedTrainingTests(unittest.TestCase):
     def test_swallowed_log_failure_before_commit_does_not_save_progress(self):
         from torch.utils.tensorboard import SummaryWriter
@@ -148,7 +150,7 @@ class OptimizedTrainingTests(unittest.TestCase):
             self.assertAlmostEqual(float(fields['run_samples_s']), 5 / float(fields['elapsed_s']), delta=0.005)
             unknown = io.StringIO()
             with contextlib.redirect_stdout(unknown):
-                run_training(replace(settings, output_dir=root / 'artifacts/unknown'), max_batches=1, clock=lambda: 0.0)
+                run_training(replace(settings, output_dir=root / 'artifacts/unknown'), max_batches=2, clock=lambda: 0.0)
             self.assertIn('train_samples_s=unknown eta_s=unknown', unknown.getvalue())
 
     def test_validation_and_save_failure_keep_last_committed_checkpoint(self):
@@ -265,6 +267,94 @@ class OptimizedTrainingTests(unittest.TestCase):
             torch.save(corrupt, settings.output_dir / 'latest.pth')
             with self.assertRaisesRegex(RuntimeError, 'cuda_rng_state_all'):
                 run_training(settings)
+
+
+@unittest.skipUnless(torch.cuda.is_available(), '需要 CUDA 验证真实训练日志周期')
+class TrainingLogCadenceTests(unittest.TestCase):
+    def test_250_batch_logs_preserve_metrics_validation_and_resume(self):
+        """重用小块扩展样本流，实际跑过两个周期及暂停、恢复、epoch 尾批。"""
+        from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
+
+        class Clock:
+            now = 0.0
+            train_batches = 0
+
+            def __call__(self):
+                return self.now
+
+        clock = Clock()
+
+        class RepeatedReader(DatasetBatchReader):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self.records *= 223 if self.split == 'train' else 101
+                self.total_samples = sum(record.sample_count for record in self.records)
+
+            def _iterate(self, *args):
+                for batch in super()._iterate(*args):
+                    if self.split == 'train':
+                        clock.train_batches += 1
+                        clock.now += 1 if clock.train_batches <= 51 else 3
+                    else:
+                        clock.now += 10
+                    yield batch
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            with contextlib.redirect_stdout(io.StringIO()):
+                settings = replace(
+                    small_settings(root, build_dataset(root)), num_epochs=1,
+                    log_every_batches=50, save_every_batches=500, validation_samples=202,
+                )
+            original_save = torch.save
+
+            def timed_save(*args, **kwargs):
+                clock.now += 1000
+                return original_save(*args, **kwargs)
+
+            first, resumed, tail = io.StringIO(), io.StringIO(), io.StringIO()
+            with patch('precompute_pipeline.train_optimize.train.DatasetBatchReader', RepeatedReader), patch('torch.save', timed_save):
+                with contextlib.redirect_stdout(first):
+                    run_training(settings, max_batches=249, clock=clock)
+                self.assertNotIn('event=train ', first.getvalue())
+                clock.now = 0
+                clock.train_batches = 0
+                with contextlib.redirect_stdout(resumed):
+                    result = run_training(settings, max_batches=251, clock=clock)
+                self.assertEqual(result['batches_completed'], 500)
+                with contextlib.redirect_stdout(tail):
+                    result = run_training(settings, clock=clock)
+            self.assertEqual(result['batches_completed'], 502)
+            self.assertNotIn('event=train ', tail.getvalue())
+            self.assertIn('event=epoch_complete ', tail.getvalue())
+
+            lines = [line for line in resumed.getvalue().splitlines() if 'event=train ' in line]
+            fields = [dict(item.split('=', 1) for item in line.split('] ', 1)[1].split()) for line in lines]
+            self.assertEqual([int(row['batches']) for row in fields], [250, 500])
+            self.assertEqual(float(fields[0]['train_samples_s']), 4.0)
+            # 251..300批每批1秒，301..500批每批3秒，不能仅用末尾50批估速。
+            self.assertAlmostEqual(float(fields[1]['train_samples_s']), 1000 / 650, delta=0.005)
+            self.assertEqual(float(fields[0]['run_samples_s']), 4.0)
+
+            events = EventAccumulator(str(settings.output_dir / 'tensorboard')).Reload()
+            losses = {entry.step: entry.value for entry in events.Scalars('train/loss')}
+            self.assertEqual(sorted(losses), [50, 100, 150, 200, 249, 250, 300, 350, 400, 450, 500, 502])
+            for row in fields:
+                for name in ('loss', 'dqn_loss', 'cql_loss', 'rank_loss', 'rank_accuracy', 'q_mean', 'q_target_mean'):
+                    metric = next(entry.value for entry in events.Scalars(f'train/{name}') if entry.step == int(row['batches']))
+                    self.assertAlmostEqual(float(row[name]), metric, delta=max(1e-5, abs(metric) * 1e-5))
+            combined = first.getvalue() + resumed.getvalue() + tail.getvalue()
+            self.assertIn('validation_samples=200/202', combined)
+            self.assertIn('validation_samples=202/202', combined)
+            checkpoint_rows = [line for line in combined.splitlines() if 'event=checkpoint ' in line]
+            self.assertEqual(len(checkpoint_rows), 4)  # 初始、暂停249、周期500、epoch尾502。
+            self.assertIn('kind=periodic', checkpoint_rows[2])
+            self.assertIn('batches=500 ', checkpoint_rows[2])
+            saved = load_checkpoint(settings.output_dir / 'latest.pth')
+            self.assertEqual(saved['last_validation']['kind'], 'epoch')
+            log_text = ''.join(path.read_text() for path in settings.output_dir.glob('log-*.log'))
+            logged_steps = [int(line.split('batches=', 1)[1].split()[0]) for line in log_text.splitlines() if 'event=train ' in line]
+            self.assertEqual(sorted(logged_steps), [250, 500])
 
 
 if __name__ == '__main__':
