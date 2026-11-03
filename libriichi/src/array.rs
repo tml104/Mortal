@@ -1,3 +1,4 @@
+// arrays.rs: 定义一个简单的二维数组结构体，支持按行填充和按行列赋值，并能转换为ndarray::Array2
 pub struct Simple2DArray<const COLS: usize, T> {
     arr: Vec<T>,
 }

@@ -4,6 +4,8 @@
 //! with tenhou.net/2 format tile description (like 0m 123z) instead of mjai (like
 //! 5mr ESW).
 
+// hand.rs: 解析 `123m 405p 123z` 形式的紧凑手牌；`0` 表示赤五，`z` 表示字牌。主要用于测试和状态打印
+
 use crate::tile::Tile;
 use crate::vec_ops::vec_add_assign;
 use crate::{must_tile, tuz};

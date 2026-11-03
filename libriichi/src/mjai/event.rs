@@ -130,7 +130,7 @@ pub struct OutOfBoundError(pub u8);
 /// An extended version of `Event` which allows metadata recording.
 #[skip_serializing_none]
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct EventExt { // 在 `Event` 上附加可选 `Metadata`
+pub struct EventExt { // 在 `Event` 上附加可选 `Metadata`，形成 EventExt
     #[serde(flatten)]
     pub event: Event,
     pub meta: Option<Metadata>, // 可选的Metadata，包括：
@@ -192,6 +192,7 @@ impl Event {
         )
     }
 
+    // 遍历事件（开局、自摸、吃碰杠等涉及到牌的），并对涉及的牌调用swap_tile（也即调用t.augment()）
     pub fn augment(&mut self) {
         const fn swap_tile(t: &mut Tile) {
             *t = t.augment();

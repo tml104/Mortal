@@ -40,6 +40,11 @@ printf 'Training PID: %s\n' "$!"
 kill -TERM [PID]
 ```
 
+（查找PID）
+```
+pgrep -af '[p]recompute_pipeline/train_optimize/train.py'
+```
+
 这些命令假定已经激活 mortal Conda 环境。三个脚本依次完成牌谱筛选、全量预计算和主模型训练；前一步没有成功完成时，不应启动后一步。
 
 筛选入口检查协议、物理牌与点数规则，并通过 libriichi 实际提取 observation 和动作；它不运行奖励模型。确定不可用的牌谱会保留原相对路径移入 quarantine，原因追加到 JSONL 报告。未知程序、内存或权限错误会停止脚本，不会被当作坏牌谱移动。

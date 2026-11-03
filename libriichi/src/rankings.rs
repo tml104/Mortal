@@ -1,10 +1,11 @@
 #[derive(Debug, Clone, Copy)]
 pub struct Rankings {
-    pub player_by_rank: [u8; 4],
-    pub rank_by_player: [u8; 4],
+    pub player_by_rank: [u8; 4], // 第 `r` 名对应的玩家 ID。玩家ID和start_game事件里的names列表有关。
+    pub rank_by_player: [u8; 4], // 玩家 `p` 的排名，值域`0..3` 对应一至四位。
 }
 
 impl Rankings {
+    // 从分数列表创建Rankings数据结构
     pub fn new(scores: [i32; 4]) -> Self {
         let mut player_by_rank = [0, 1, 2, 3];
         player_by_rank.sort_by_key(|&i| -scores[i as usize]);

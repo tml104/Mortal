@@ -353,6 +353,11 @@ flowchart LR
 - `player_by_rank[r]`：第 `r` 名对应的玩家 ID。
 - `rank_by_player[p]`：玩家 `p` 的排名，`0..3` 对应一至四位。
 
+（备注：玩家ID（从0开始）和start_game事件里的names列表有关。例如：{"type":"start_game","names":["小明","小红","小李","小王"]}，则分别对应0123）
+  
+
+（接上例，若scores = [25000, 25000, 30000, 20000]，则player_by_rank = [2, 0, 1, 3]（从0开始排顺位，所以是第一名ID2也即小李），rank_by_player = [1, 2, 0, 3]（从0开始排位，则4家顺位为2314））
+
 `Rankings::new(scores)` 从玩家顺序 `[0,1,2,3]` 出发稳定地按点数降序排序。同点数时 ID 较小者在前。`Grp`、arena 和统计都复用这一规则，Python 的辅助标签使用稳定 `argsort` 与它对齐。
 
 例如 `[25000,25000,30000,20000]` 得到 `player_by_rank=[2,0,1,3]`、`rank_by_player=[1,2,0,3]`。
