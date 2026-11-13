@@ -370,8 +370,8 @@ flowchart LR
 | --- | --- | --- |
 | [hand.rs](../libriichi/src/hand.rs) | `hand_with_aka`、`hand`、`tile37_to_vec`、`tile34_to_vec`、`tiles_to_string` | 解析 `123m 405p 123z` 形式的紧凑手牌；`0` 表示赤五，`z` 表示字牌。主要用于测试和状态打印 |
 | [array.rs](../libriichi/src/array.rs) | `Simple2DArray<COLS,T>` | 底层保存连续 `Vec<T>`，用 `row*COLS+col` 寻址；提供填充整行、单格和连续多行，最后构造 `ndarray::Array2` |
-| [macros.rs](../libriichi/src/macros.rs) | `t!`、`tu8!`、`tuz!`、`matches_tu8!`、`must_tile!` | 把牌字面量映射到 `Tile`、`u8`、`usize`，减少手写索引；由编译器展开 |
-| [vec_ops.rs](../libriichi/src/vec_ops.rs) | `vec_add_assign` | 对两个切片逐项相加，用于点数变化与计数汇总 |
+| [macros.rs](../libriichi/src/macros.rs) | `t!`、`tu8!`、`tuz!`、`matches_tu8!`、`must_tile!` | 把牌字面量映射到 `Tile`、`u8`、`usize`，减少手写索引；由编译器展开（TODO：要详细解释） |
+| [vec_ops.rs](../libriichi/src/vec_ops.rs) | `vec_add_assign` | 对两个切片逐项相加，用于点数变化与计数汇总（TODO：优先看codex的解释） |
 
 `hand()` 采用天凤紧凑手牌格式，mjai 事件采用单张牌字符串格式。编写测试时可用前者构造计数数组，再用后者构造实际事件。
 
@@ -393,11 +393,11 @@ flowchart LR
 
 常用含义为：`-1` 已构成和牌形，`0` 听牌，`1` 一向听。`len_div3` 表示当前暗手要组成的面子数，完整门清手一般取 4；吃碰杠从暗手移出面子后相应减小。
 
-普通手计算把万、筒、索、字牌拆开。每种牌的张数处于 `0..4`，因此可以把一个花色的计数按五进制编码为表索引。表项保存不同面子数与雀头分配所需的数量，`add_suhai`、`add_jihai` 合并各组的最优结果。
+普通手计算把万、筒、索、字牌拆开。每种牌的张数处于 `0..4`，因此可以把一个花色的计数按五进制编码为表索引。表项保存不同面子数与雀头分配所需的数量，`add_suhai`、`add_jihai` 合并各组的最优结果。（TODO：要详细解释？？）
 
 七对子使用已有对子数、牌种数计算；国士无双统计十三种幺九牌及是否已有对子。`calc_all` 在完整暗手条件下考虑特殊牌型，且在已经得到足够小的结果时提前返回。
 
-`shanten_suhai.bin.gz`、`shanten_jihai.bin.gz` 通过 `include_bytes!` 编译进库，`LazyLock` 保存解压后的表。Python 导入扩展时会调用 `ensure_init()`，首次导入会承担这部分初始化成本。
+`shanten_suhai.bin.gz`、`shanten_jihai.bin.gz` 通过 `include_bytes!` 编译进库，`LazyLock` 保存解压后的表（TODO：要详细解释？？）。Python 导入扩展时会调用 `ensure_init()`，首次导入会承担这部分初始化成本。
 
 ### 3.2 `point.rs`：从符番转换为支付点数
 
@@ -411,7 +411,7 @@ flowchart LR
 
 本场棒、供托和包牌支付由 `BoardState::handle_hora` 在基础点数上继续处理。点数表的测试使用基本点数公式与百点进位规则逐项核对。
 
-### 3.3 `agari.rs`：判断役、计算符番、检查立直后暗杠
+### 3.3 `agari.rs`：判断役、计算符番、检查立直后暗杠(TODO: 261110)
 
 [agari.rs](../libriichi/src/algo/agari.rs) 的主要类型如下。
 
@@ -422,9 +422,9 @@ flowchart LR
 | `Div` | 一种拆牌结果：雀头、刻子、顺子与部分预先识别的牌型标志 |
 | `DivWorker` | 在具体拆牌结果上检查役、等待形式、符及暗刻归属所需的上下文 |
 
-实现从牌型提取紧凑 key，在 `AGARI_TABLE` 中寻找可能的拆分。表由 `agari.bin.gz` 解压后放入 `BoomHashMap`。同一手牌可对应多个拆分，代码对这些拆分分别评估，再按 `Agari` 的比较规则选择结果。
+实现从牌型提取紧凑 key，在 `AGARI_TABLE` 中寻找可能的拆分。表由 `agari.bin.gz` 解压后放入 `BoomHashMap`。同一手牌可对应多个拆分，代码对这些拆分分别评估，再按 `Agari` 的比较规则选择结果。（TODO：究竟存的是什么呢，有待研究）
 
-`has_yaku()` 只需找到一个成立的役，适用于合法荣和或自摸判断。`search_yakus()` 返回牌型自身提供的役与符番。`agari(additional_hans,doras)` 加上立直、一发、门清自摸、抢杠等情境番与宝牌番，并保留“至少有一个役”的要求。
+`has_yaku()` 只需找到一个成立的役，适用于合法荣和或自摸判断。`search_yakus()` 返回牌型自身提供的役与符番。`AgariCalculator::agari(additional_hans,doras)` （235行）加上立直、一发、门清自摸、抢杠等情境番与宝牌番，并保留“至少有一个役”的要求。
 
 `is_ron` 参与符、三暗刻和四暗刻等计算。门清自摸等情境番由调用方显式提供。`PlayerState::agari_points` 汇总这些条件，也处理天和与地和的一倍役满规则。
 

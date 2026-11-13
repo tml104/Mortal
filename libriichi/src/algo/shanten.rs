@@ -80,7 +80,7 @@ fn add_jihai(lhs: &mut [u8; 10], index: usize, m: usize) {
 }
 
 fn sum_tiles(tiles: &[u8]) -> usize {
-    tiles.iter().fold(0, |acc, &x| acc * 5 + x as usize)
+    tiles.iter().fold(0, |acc, &x| acc * 5 + x as usize) // fold: 累加。其逻辑类似于let mut acc = 0; for x in tiles { acc = acc * 5 + x as usize; } acc
 }
 
 /// `len_div3` must be within [0, 4].

@@ -14,29 +14,50 @@ use std::cmp::Ordering;
 use std::iter;
 use std::sync::LazyLock;
 
-use boomphf::hashmap::BoomHashMap;
+use boomphf::hashmap::BoomHashMap; // 适合用于键固定的快速构建
 use byteorder::{LittleEndian, ReadBytesExt};
 use flate2::read::GzDecoder;
 use tinyvec::ArrayVec;
 
-const AGARI_TABLE_SIZE: usize = 9_362;
+const AGARI_TABLE_SIZE: usize = 9_362; // 9362条记录，包含了所有可能的和牌组合的编码和对应的拆牌方案
+
+// BoomHashMap<u32, ArrayVec<[Div; 4]>>：u32 key → 若干个 Div
+// u32 key：来自 get_tile14_and_key() 生成的牌型编码
+// ArrayVec<[Div; 4]>: 一手牌最多4种拆分方式
+// LazyLock是可以线程安全的
 
 static AGARI_TABLE: LazyLock<BoomHashMap<u32, ArrayVec<[Div; 4]>>> = LazyLock::new(|| {
+    // 一条条二进制记录：牌型编码 → 若干个压缩的拆牌方案
+    // include_bytes!宏在编译时读取文件，把文件的原始字节嵌入程序。
+    // as_slice(): 转换为字节切片
+    // GzDecoder::new(...) : 创建 gzip 解压读取器。
+
+//     一条记录（多字节整数都按小端序）：
+// ┌─────────────┬──────────────┬────────────────────────┐
+// │ key：4 字节  │ 数量：1 字节 │ 数量个方案，每个 4 字节 │
+// └─────────────┴──────────────┴────────────────────────┘
+// u32 key 小端序
+// u8  v_size
+// u32 encoded_div_0 小端序 （每个方案也被压缩成了u32）
+// u32 encoded_div_1 小端序
+// ...
     let mut raw = GzDecoder::new(include_bytes!("data/agari.bin.gz").as_slice());
 
-    let (keys, values): (Vec<_>, Vec<_>) = (0..AGARI_TABLE_SIZE)
+    // Vec<u32>， Vec<ArrayVec<[Div; 4]>>
+    let (keys, values): (Vec<_>, Vec<_>) = (0..AGARI_TABLE_SIZE) // （0..9362）
         .map(|_| {
-            let key = raw.read_u32::<LittleEndian>().unwrap();
-            let v_size = raw.read_u8().unwrap();
-            let value = (0..v_size)
+            // 从二进制解码出 “u32 key → 若干个 Div” 
+            let key = raw.read_u32::<LittleEndian>().unwrap(); // 读取位置会不断向后推进
+            let v_size = raw.read_u8().unwrap(); // encoded_div 的数量
+            let value = (0..v_size) // v_size是从二进制解析出的拆解方案数量，下面要重复解析v_size次这个方案
                 .map(|_| raw.read_u32::<LittleEndian>().unwrap())
-                .map(Div::from)
+                .map(Div::from) // 后面的 impl From<u32> for Div 定义了具体解码规则（148行）
                 .collect();
             (key, value)
-        })
-        .unzip();
+        }) // 到此为止只是map到了一个迭代器，里面是 (key, value) 元组
+        .unzip(); // 转换为 keys, values 列表二元组
 
-    if cfg!(test) {
+    if cfg!(test) { // 使用test编译配置时为true，普通构建时为 false
         // Ensure there is no duplicated keys.
         let mut k = keys.clone();
         k.sort_unstable();
@@ -51,20 +72,21 @@ static AGARI_TABLE: LazyLock<BoomHashMap<u32, ArrayVec<[Div; 4]>>> = LazyLock::n
 });
 
 #[derive(Debug, Default)]
-struct Div {
-    pair_idx: u8,
-    kotsu_idxs: ArrayVec<[u8; 4]>,
-    shuntsu_idxs: ArrayVec<[u8; 4]>,
-    has_chitoi: bool,
-    has_chuuren: bool,
-    has_ittsuu: bool,
-    has_ryanpeikou: bool,
+struct Div { // Div: 一种拆牌结果：雀头、刻子、顺子与部分预先识别的牌型标志
+    pair_idx: u8, // 雀头
+    // ArrayVec: 固定容量、内联存储序列
+    kotsu_idxs: ArrayVec<[u8; 4]>, // 刻子（杠子也含む）
+    shuntsu_idxs: ArrayVec<[u8; 4]>, // 顺子
+    has_chitoi: bool, // 七对
+    has_chuuren: bool, // 九莲宝灯
+    has_ittsuu: bool, // 清龙
+    has_ryanpeikou: bool, // 二杯口
     // CAUTION: it is sound but not complete, broken if there is any ankan
-    has_ipeikou: bool,
+    has_ipeikou: bool, // 一杯口
 }
 
 #[derive(Debug, Clone, Copy, Eq)]
-pub enum Agari {
+pub enum Agari { // 和牌番数（含役满）枚举
     /// `fu` may be 0 if `han` is greater than 4.
     Normal {
         fu: u8,
@@ -74,7 +96,7 @@ pub enum Agari {
 }
 
 #[derive(Debug)]
-pub struct AgariCalculator<'a> {
+pub struct AgariCalculator<'a> { // 和牌状态与由此得的计算器
     /// Must include the winning tile (i.e. must be 3n+2)
     pub tehai: &'a [u8; 34],
     /// `self.chis.is_empty() && self.pons.is_empty() && self.minkans.is_empty()`
@@ -95,7 +117,7 @@ pub struct AgariCalculator<'a> {
     pub is_ron: bool,
 }
 
-struct DivWorker<'a> {
+struct DivWorker<'a> { // 在具体某种拆牌结果Div上计算役种、听牌形式、暗刻归属的类（？）
     sup: &'a AgariCalculator<'a>,
     tile14: &'a [u8; 14],
     div: &'a Div,
@@ -120,9 +142,10 @@ struct DivWorker<'a> {
     /// should be a part of either the minkou 55 + 5 or the shuntsu 46 + 5. In
     /// practice, the latter should be preferred because it preserves the ankou.
     /// A test case covers this.
-    winning_tile_makes_minkou: bool,
+    winning_tile_makes_minkou: bool, // 45556 和 5这个例子应该始终看成 555 暗刻 + 456 顺子，因为符数更高
 }
 
+// 用于最开始构造AGARI_TABLE
 impl From<u32> for Div {
     fn from(v: u32) -> Self {
         let pair_idx = ((v >> 6) & 0b1111) as u8;
@@ -203,13 +226,13 @@ impl Agari {
 impl AgariCalculator<'_> {
     #[inline]
     #[must_use]
-    pub fn has_yaku(&self) -> bool {
-        self.search_yakus_impl(true).is_some()
+    pub fn has_yaku(&self) -> bool { // 只需找到一个成立的役，适用于合法荣和或自摸判断。
+        self.search_yakus_impl(true).is_some() // search_yakus_impl的实现见下280行左右
     }
 
     #[inline]
     #[must_use]
-    pub fn search_yakus(&self) -> Option<Agari> {
+    pub fn search_yakus(&self) -> Option<Agari> { // 返回牌型自身提供的役与符番
         self.search_yakus_impl(false)
     }
 
@@ -764,6 +787,7 @@ pub fn ensure_init() {
     assert_eq!(AGARI_TABLE.len(), AGARI_TABLE_SIZE);
 }
 
+// 把手牌数量向量转换为一个14张牌的数组和一个32位的key，用于快速查找和计算和牌的可能性。
 fn get_tile14_and_key(tiles: &[u8; 34]) -> ([u8; 14], u32) {
     let mut tile14 = [0; 14];
     let mut tile14_iter = tile14.iter_mut();

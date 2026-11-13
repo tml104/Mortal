@@ -6,7 +6,7 @@
 /// assert_eq!(tu8!(E), 27u8);
 /// ```
 #[macro_export]
-macro_rules! tu8 {
+macro_rules! tu8 { // 牌字面量Tile映射到uint8
     (1m) => {
         0_u8
     };
@@ -149,7 +149,7 @@ macro_rules! tuz {
 
 /// Used for making const tiles.
 #[macro_export]
-macro_rules! t {
+macro_rules! t { // 字面量映射到Tile
     ($s:tt) => {
         // All possible values of `tu8!` are valid for `Tile`.
         $crate::tile::Tile::new_unchecked($crate::tu8!($s))

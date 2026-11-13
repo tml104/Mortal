@@ -40,6 +40,14 @@ printf 'Training PID: %s\n' "$!"
 kill -TERM [PID]
 ```
 
+也可以用下面一条命令停止训练，无需先查找和填写 PID：
+
+```bash
+pkill -TERM -f '[p]recompute_pipeline/train_optimize/train[.]py([[:space:]]|$)'
+```
+
+`-f` 按完整命令行匹配进程，`-TERM` 与上面的 `kill -TERM` 使用相同信号。如果同时运行多个该训练脚本，它们都会收到终止信号；只想停止其中一个时，仍使用查找 PID 后执行 `kill -TERM PID` 的方式。
+
 （查找PID）
 ```
 pgrep -af '[p]recompute_pipeline/train_optimize/train.py'

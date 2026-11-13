@@ -1,8 +1,8 @@
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct Point {
-    pub ron: i32,
-    pub tsumo_ko: i32,
-    pub tsumo_oya: i32,
+    pub ron: i32,   // 荣的点数（注意这里荣得点和自摸得点是同时提供的）
+    pub tsumo_ko: i32,   // 自摸的点数（闲家）
+    pub tsumo_oya: i32,   // 自摸的点数（庄家），自己就是自亲时为0
 }
 
 impl Point {
@@ -10,7 +10,7 @@ impl Point {
     ///
     /// If `is_oya` holds, the `tsumo_oya` of the return value will always be `0`.
     #[must_use]
-    pub fn calc(is_oya: bool, fu: u8, han: u8) -> Self {
+    pub fn calc(is_oya: bool, fu: u8, han: u8) -> Self { // 根据庄家或闲家，提供番数和符数，计算得点
         let (ron, tsumo_ko, tsumo_oya) = if is_oya {
             match (fu, han) {
                 (20, 2) | (40, 1) => (2000, 700, 0),
@@ -85,7 +85,7 @@ impl Point {
 
     #[inline]
     #[must_use]
-    pub const fn yakuman(is_oya: bool, count: i32) -> Self {
+    pub const fn yakuman(is_oya: bool, count: i32) -> Self { // 计算役满。count：役满倍数
         if is_oya {
             Self {
                 ron: 48000 * count,
@@ -103,7 +103,7 @@ impl Point {
 
     #[inline]
     #[must_use]
-    pub const fn tsumo_total(self, is_oya: bool) -> i32 {
+    pub const fn tsumo_total(self, is_oya: bool) -> i32 { // 汇总自摸值，也即全加在一起
         if is_oya {
             self.tsumo_ko * 3
         } else {
